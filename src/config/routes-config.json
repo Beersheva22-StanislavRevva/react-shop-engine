@@ -1,0 +1,11 @@
+{
+    "always": [],
+    "authenticated": [{"to": "/", "label": "Product Editor", "order":1},
+    {"to": "/signout", "label": "Sign Out","order":1000}
+     ],
+     "admin": [{"to": "/employees/add", "label": "Add Product", "order":2}
+    ],
+     "noadmin": [],
+     "noauthenticated": [{"to": "/signin", "label": "Sign In", "order": 2}],
+     "developmentAdmin": [{"to": "/generation", "label": "Generate Employees", "order":20}]
+}

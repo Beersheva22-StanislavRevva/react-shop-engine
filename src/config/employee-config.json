@@ -1,0 +1,14 @@
+{
+    
+    "minPrice": 5,
+    "maxPrice": 300,
+   
+    "maxYear": 2003,
+    "minYear": 1950,
+    "minRandomQuantity": 1,
+    "maxRandomQuantity": 50,
+    "category": [
+        "Strong alcohol", "Vine", "Sparkling Vine", "Beer", "Cider"
+    ]
+    
+}
