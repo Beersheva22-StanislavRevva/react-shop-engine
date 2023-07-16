@@ -22,6 +22,7 @@ import { Alert, Snackbar } from "@mui/material";
 import { codeActions } from "./redux/slices/codeSlice";
 import Generation from "./components/pages/Generation";
 import process from "process";
+import Products from "./components/pages/Products";
 const {always, authenticated, admin, noadmin, noauthenticated} = routesConfig;
 type RouteTypeOrder = RouteType & {order?: number}
 function getRoutes(userData: UserData): RouteType[] {
@@ -76,7 +77,8 @@ const App: React.FC = () => {
   return <BrowserRouter>
   <Routes>
     <Route path="/" element={<NavigatorDispatcher routes={routes}/>}>
-        <Route index element={<Employees/>}/>
+        <Route index element={<Products/>}/>
+        <Route path="employees/edit" element={<Employees/>}/>
         <Route path="employees/add" element={<AddEmployee/>}/>
         <Route path="statistics/age" element={<AgeStatistics/>}/>
         <Route path="statistics/salary" 

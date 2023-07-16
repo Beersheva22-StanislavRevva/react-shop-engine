@@ -12,7 +12,7 @@ const EmployeeCard: React.FC<Props> = ({employee, actionFn}) => {
       return (
         <Card sx={{ minWidth: 275 }}>
           <CardContent> 
-          <Typography variant="h5" ml={7}>
+          <Typography variant="h6" ml={7}>
                    id: {employee.id}
               </Typography>
               <Typography variant="h5" ml={7} >
@@ -21,16 +21,16 @@ const EmployeeCard: React.FC<Props> = ({employee, actionFn}) => {
               {/* <Typography variant="h5" ml={7} >
                    birthDate: {getISODateStr(employee.birthDate)}
               </Typography> */}
-              <Typography variant="h5" ml={7} >
-                   department: {employee.category}
+              <Typography variant="h6" ml={7} >
+                   category: {employee.category}
               </Typography>
-              <Typography variant="h5" ml={7} >
-                   salary: {employee.price}
+              <Typography variant="h6" ml={7} >
+                   price: {employee.price} unit: {employee.unit}
               </Typography>
-              {/* <Typography variant="h5" ml={7}>
-                   gender: {employee.gender}
-              </Typography> */}
-          </CardContent>
+              <Typography variant="body1" ml={7}>
+                   description: {employee.description}
+              </Typography>
+              </CardContent>
          { userData && userData.role=="admin" && <CardActions>
             <Button size="small"onClick={() =>actionFn(false) }>Update</Button>
             <Button size="small" onClick={() =>actionFn(true)}>Delete</Button>

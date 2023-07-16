@@ -1,4 +1,4 @@
-import { Box,  Button,  Modal, useMediaQuery, useTheme } from "@mui/material"
+import { Box,  Button,  Card, CardActions,  CardContent,  CardMedia,  Dialog,  DialogContent,  DialogTitle,  Grid,  Modal, Typography, useMediaQuery, useTheme } from "@mui/material"
 import { useState, useEffect, useRef, useMemo, ReactNode } from "react";
 import Employee from "../../model/Employee";
 import { employeesService } from "../../config/service-config";
@@ -13,6 +13,7 @@ import InputResult from "../../model/InputResult";
 import { useDispatchCode, useSelectorEmployees } from "../../hooks/hooks";
 import EmployeeCard from "../cards/EmployeeCard";
 import UserData from "../../model/UserData";
+import { log } from "console";
 const columnsCommon: GridColDef[] = [
     {
         field: 'id', headerName: 'ID', flex: 0.3, headerClassName: 'data-grid-header',
@@ -39,13 +40,10 @@ const columnsCommon: GridColDef[] = [
         align: 'center', headerAlign: 'center'
     },
     {
-        field: 'imageLink',
-        headerName: 'Image',
-        flex: 0.7,
-        headerClassName: 'data-grid-header',
-        align: 'center',
-        headerAlign: 'center',
-        renderCell: (params) => <img src={params.value} alt="product" width="50" height="50" />,
+        field: 'imageLink', headerName: 'Image', flex: 0.9, headerClassName: 'data-grid-header',
+        align: 'center', headerAlign: 'center', renderCell: params => {
+            return <img src={params.value} alt="product image" width="50vw"/*{params.value}*//>
+        }
     },
     // {
     //     field: 'birthDate', headerName: "Date", flex: 0.8, type: 'date', headerClassName: 'data-grid-header',
@@ -128,6 +126,8 @@ const Employees: React.FC = () => {
     const [openConfirm, setOpenConfirm] = useState(false);
     const [openEdit, setFlEdit] = useState(false);
     const [openDetails, setFlDetails] = useState(false);
+    const [openProductDetails, setFlProductDetails] = useState(false);
+    const [selectedProduct, setSelectedProduct] = useState<Employee | null>(null);
     const title = useRef('');
     const content = useRef('');
     const employeeId = useRef('');
@@ -201,17 +201,24 @@ const Employees: React.FC = () => {
         }
         setFlDetails(false)
     }
+    function getCardButton(userData:UserData): ReactNode {
+        let res: ReactNode;
+        if (userData && userData.role == 'user') {
+            res = <Button style={{textAlign:'center', justifyContent:'center'}}>Add to cart</Button>;
+        }
+        return res;
+    }
     
     return <Box sx={{
         display: 'flex', justifyContent: 'center',
         alignContent: 'center'
     }}>
-        <Box sx={{ height: '80vh', width: '95vw' }}>
+        {/* <Box sx={{ height: '80vh', width: '95vw' }}>
             <DataGrid columns={columns} rows={employees} />
-        </Box>
+        </Box> */}
         <Confirmation confirmFn={confirmFn.current} open={openConfirm}
             title={title.current} content={content.current}></Confirmation>
-        <Modal
+        {/* <Modal
             open={openEdit}
             onClose={() => setFlEdit(false)}
             aria-labelledby="modal-modal-title"
@@ -220,8 +227,8 @@ const Employees: React.FC = () => {
             <Box sx={style}>
                 <EmployeeForm submitFn={updateEmployee} employeeUpdated={employee.current} />
             </Box>
-        </Modal>
-        <Modal
+        </Modal> */}
+        {/* <Modal
             open={openDetails}
             onClose={() => setFlDetails(false)}
             aria-labelledby="modal-modal-title"
@@ -230,7 +237,76 @@ const Employees: React.FC = () => {
             <Box sx={style}>
                 <EmployeeCard actionFn={cardAction} employee={employee.current!} />
             </Box>
-        </Modal>
-        </Box>
+        </Modal> */}
+        
+        <Grid container spacing={3}>
+            {employees.map(e =>
+                <Grid item xs={6} sm={3} lg={2} key={e.id}>
+                    <Card sx={{ maxWidth: '100', maxHeight: '200', display: 'flex', flexDirection: 'column', alignItems: 'center', }}
+                        onClick={() => setSelectedProduct(e)} >
+                        <CardMedia
+                            height='200'
+                            component="img"
+                            src={e.imageLink}
+                            alt="Producth"
+                            sx={{ objectFit: 'contain' }}
+                        />
+                        <CardContent>
+                            <Typography variant="h5" color="text.secondary" textAlign="center">
+                                {e.price} -
+                            </Typography>
+                            <Typography variant="body1" color="text.secondary" textAlign="center">
+                                {e.name}
+                            </Typography>
+                            <Typography variant="body2" color="text.secondary" textAlign="center">
+                                {e.category}  {e.unit}
+                            </Typography>
+                            {getCardButton(userData)}
+                        </CardContent>
+                    </Card>
+                </Grid>)}
+        </Grid>
+        {/* <Modal
+            open={openProductDetails}
+            onClose={() => setFlProductDetails(false)}
+            aria-labelledby="modal-modal-title"
+            aria-describedby="modal-modal-description"
+        >
+            <Box sx={style}>
+                <EmployeeCard actionFn={cardProductAction} employee={employee.current!} />
+            </Box>
+        </Modal> */}
+        <Modal open={!!selectedProduct}
+        onClose={() => setSelectedProduct(null)}
+        aria-labelledby="modal-modal-title"
+        aria-describedby="modal-modal-description">
+            
+            <Card sx={{ maxWidth: '100', maxHeight: '200', display: 'flex', flexDirection: 'column', alignItems: 'center'}}
+                         >
+                <CardMedia
+                    component="img"
+                    alt={selectedProduct?.name}
+                    height="500"
+                    image={selectedProduct?.imageLink}
+                    sx={{ objectFit: 'contain' }}
+                />
+                 <CardContent sx={{ maxWidth: '100', maxHeight: '200', display: 'flex', flexDirection: 'column', alignItems: 'center'}}>
+                            <Typography variant="h5" color="text.secondary">
+                            {selectedProduct?.category} {selectedProduct?.name}
+                            </Typography>
+                            <Typography variant="body1" color="text.secondary">
+                               {selectedProduct?.description}
+                            </Typography>
+                            <Typography variant="body1" color="text.secondary">
+                                {selectedProduct?.unit}
+                            </Typography>
+                            <Typography variant="h5" color="text.secondary">
+                                price:{selectedProduct?.price} -
+                            </Typography>
+                            {getCardButton(userData)}
+                        </CardContent>
+            </Card>    
+            </Modal>
+    </Box>
 }
 export default Employees;

@@ -1,9 +1,9 @@
 {
-    "always": [],
-    "authenticated": [{"to": "/", "label": "Product Editor", "order":1},
-    {"to": "/signout", "label": "Sign Out","order":1000}
+    "always": [{"to": "/", "label": "Products", "order":1}],
+    "authenticated": [{"to": "/signout", "label": "Sign Out","order":1000}
      ],
-     "admin": [{"to": "/employees/add", "label": "Add Product", "order":2}
+     "admin": [{"to": "/employees/edit", "label": "Product Editor", "order":2},
+                {"to": "/employees/add", "label": "Add Product", "order":4}
     ],
      "noadmin": [],
      "noauthenticated": [{"to": "/signin", "label": "Sign In", "order": 2}],

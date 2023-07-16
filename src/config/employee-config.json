@@ -9,6 +9,9 @@
     "maxRandomQuantity": 50,
     "category": [
         "Strong alcohol", "Vine", "Sparkling Vine", "Beer", "Cider"
+    ],
+    "unit": [
+        "0.25l", "0.33l", "0.5l", "0,7l", "0.75l", "1.0l", "1.5l"
     ]
     
 }

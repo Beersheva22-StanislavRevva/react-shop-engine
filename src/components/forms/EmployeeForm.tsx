@@ -12,11 +12,18 @@ type Props = {
 const initialDate: any = 0;
 const initialGender: any = '';
 const initialEmployee: Employee = {
-    id: 0, /*birthDate: initialDate,*/ name: '',category: '', price: 0,
+    id: 0,
+    /*birthDate: initialDate,*/
+    name: '',
+    category: '',
+    price: 0,
+    description: '',
+    unit:'',
+    imageLink: ''
      /*gender: initialGender*/
 };
 export const EmployeeForm: React.FC<Props> = ({ submitFn, employeeUpdated }) => {
-    const { minYear, minPrice: minPrice, maxYear, maxPrice: maxPrice, category}
+    const { minYear, minPrice: minPrice, maxYear, maxPrice: maxPrice, category:category, unit:unit}
         = employeeConfig;
     const [employee, setEmployee] =
         useState<Employee>(employeeUpdated || initialEmployee);
@@ -27,13 +34,25 @@ export const EmployeeForm: React.FC<Props> = ({ submitFn, employeeUpdated }) => 
         emplCopy.name = name;
         setEmployee(emplCopy);
     }
+    function handlerDescription(event: any) {
+        const description = event.target.value;
+        const emplCopy = { ...employee };
+        emplCopy.description = description;
+        setEmployee(emplCopy);
+    }
+    function handlerImageLink(event: any) {
+        const imageLink = event.target.value;
+        const emplCopy = { ...employee };
+        emplCopy.imageLink = imageLink;
+        setEmployee(emplCopy);
+    }
     // function handlerBirthdate(event: any) {
     //     const birthDate = event.target.value;
     //     const emplCopy = { ...employee };
     //     emplCopy.birthDate = new Date(birthDate);
     //     setEmployee(emplCopy);
     // }
-    function handlerSalary(event: any) {
+    function handlerPrice(event: any) {
         const salary: number = +event.target.value;
         const emplCopy = { ...employee };
         emplCopy.price = salary;
@@ -43,6 +62,12 @@ export const EmployeeForm: React.FC<Props> = ({ submitFn, employeeUpdated }) => 
         const department = event.target.value;
         const emplCopy = { ...employee };
         emplCopy.category = department;
+        setEmployee(emplCopy);
+    }
+    function handlerUnit(event: any) {
+        const unit = event.target.value;
+        const emplCopy = { ...employee };
+        emplCopy.unit = unit;
         setEmployee(emplCopy);
     }
     // function genderHandler(event: any) {
@@ -57,9 +82,7 @@ export const EmployeeForm: React.FC<Props> = ({ submitFn, employeeUpdated }) => 
         // if(!employee.gender) {
         //     setErrorMessage("Please select gender")
         // } else {
-             const res =  await submitFn(employee);
-             
-             
+             const res =  await submitFn(employee);      
              res.status == "success" && event.target.reset();
             
         /*}*/
@@ -88,6 +111,26 @@ export const EmployeeForm: React.FC<Props> = ({ submitFn, employeeUpdated }) => 
                         helperText="enter Product name" onChange={handlerName}
                         value={employee.name} />
                 </Grid>
+                <Grid item xs={8} sm={5} >
+                    <TextField type="text" required fullWidth label="Description"
+                        helperText="enter Product description" onChange={handlerDescription}
+                        value={employee.description} />
+                </Grid>
+                <Grid item xs={8} sm={5} >
+                    <FormControl fullWidth required>
+                        <InputLabel id="select-unit-id">Unit</InputLabel>
+                        <Select labelId="select-unit-id" label="Unit"
+                            value={employee.unit} onChange={handlerUnit}>
+                            <MenuItem value=''>None</MenuItem>
+                            {unit.map(unit => <MenuItem value={unit} key={unit}>{unit}</MenuItem>)}
+                        </Select>
+                    </FormControl>
+                </Grid>
+                <Grid item xs={8} sm={5} >
+                    <TextField type="text" required fullWidth label="Image link"
+                        helperText="enter Image link" onChange={handlerImageLink}
+                        value={employee.imageLink} />
+                </Grid>
                 {/* <Grid item xs={8} sm={4} md={5}>
                     <TextField type="date" required fullWidth label="birthDate"
                         value={employee.birthDate ? employee.birthDate.toISOString()
@@ -101,7 +144,7 @@ export const EmployeeForm: React.FC<Props> = ({ submitFn, employeeUpdated }) => 
                 </Grid> */}
                 <Grid item xs={8} sm={4} md={5} >
                     <TextField label="price" fullWidth required
-                        type="number" onChange={handlerSalary}
+                        type="number" onChange={handlerPrice}
                         value={employee.price || ''}
                         helperText={`enter price in range [${minPrice}-${maxPrice}]`}
                         inputProps={{

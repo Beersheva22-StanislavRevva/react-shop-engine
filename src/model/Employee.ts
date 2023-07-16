@@ -5,6 +5,9 @@ type Employee  = {
     name: string,
     category: string,
     price: number,
+    description: string,
+    unit: string,
+    imageLink: string
     //gender: 'male' | 'female'
 
 }
