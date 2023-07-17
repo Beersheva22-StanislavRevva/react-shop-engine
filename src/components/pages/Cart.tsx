@@ -1,20 +1,23 @@
-import { Box,  Button,  Card, CardActions,  CardContent,  CardMedia,  Dialog,  DialogContent,  DialogTitle,  Grid,  Modal, Typography, useMediaQuery, useTheme } from "@mui/material"
+import { Box,  Button,  Modal, useMediaQuery, useTheme } from "@mui/material"
 import { useState, useEffect, useRef, useMemo, ReactNode } from "react";
 import Employee from "../../model/Employee";
-import { employeesService,ordersService } from "../../config/service-config";
+import { employeesService, ordersService } from "../../config/service-config";
 import { Subscription } from 'rxjs';
 import { DataGrid, GridActionsCellItem, GridColDef } from "@mui/x-data-grid";
+
 import { Delete, Details, Edit, Man, Visibility, Woman } from "@mui/icons-material";
 import { useSelectorAuth } from "../../redux/store";
 import { Confirmation } from "../common/Confirmation";
 import { EmployeeForm } from "../forms/EmployeeForm";
 import InputResult from "../../model/InputResult";
-import { useDispatchCode, useSelectorEmployees } from "../../hooks/hooks";
+import { useDispatchCode, useSelectorCart, useSelectorEmployees } from "../../hooks/hooks";
 import EmployeeCard from "../cards/EmployeeCard";
 import UserData from "../../model/UserData";
-import { log } from "console";
-import OrdersServiceFire from "../../service/crud/OrdersServiceFire";
 const columnsCommon: GridColDef[] = [
+    {
+        field: 'serial', headerName: '#', flex: 0.3, headerClassName: 'data-grid-header',
+        align: 'center', headerAlign: 'center'
+    },
     {
         field: 'id', headerName: 'ID', flex: 0.3, headerClassName: 'data-grid-header',
         align: 'center', headerAlign: 'center'
@@ -28,22 +31,29 @@ const columnsCommon: GridColDef[] = [
         align: 'center', headerAlign: 'center'
     },
     {
-        field: 'description', headerName: 'Description', flex: 0.6, headerClassName: 'data-grid-header',
+        field: 'description', headerName: 'Description', flex: 0.7, headerClassName: 'data-grid-header',
         align: 'center', headerAlign: 'center'
     },
     {
-        field: 'unit', headerName: 'Unit', flex: 0.4, headerClassName: 'data-grid-header',
+        field: 'unit', headerName: 'Unit', flex: 0.3, headerClassName: 'data-grid-header',
         align: 'center', headerAlign: 'center'
     },
     {
-        field: 'price', headerName: 'Price', type: 'number', flex: 0.4, headerClassName: 'data-grid-header',
+        field: 'price', headerName: 'Price', type: 'number', flex: 0.3, headerClassName: 'data-grid-header',
         align: 'center', headerAlign: 'center'
     },
     {
-        field: 'imageLink', headerName: 'Image', flex: 0.9, headerClassName: 'data-grid-header',
-        align: 'center', headerAlign: 'center', renderCell: params => {
-            return <img src={params.value} alt="product image" width="50vw"/*{params.value}*//>
-        }
+        field: 'quantity', headerName: 'Quantity', type: 'number', flex: 0.3, headerClassName: 'data-grid-header',
+        align: 'center', headerAlign: 'center'
+    },
+    {
+        field: 'imageLink',
+        headerName: 'Image',
+        flex: 0.7,
+        headerClassName: 'data-grid-header',
+        align: 'center',
+        headerAlign: 'center',
+        renderCell: (params) => <img src={params.value} alt="product" width="50" height="50" />,
     },
     // {
     //     field: 'birthDate', headerName: "Date", flex: 0.8, type: 'date', headerClassName: 'data-grid-header',
@@ -71,7 +81,7 @@ const style = {
     p: 4,
 };
 
-const Employees: React.FC = () => {
+const Cart: React.FC = () => {
     const columnsAdmin: GridColDef[] = [
         {
             field: 'actions', type: "actions", getActions: (params) => {
@@ -118,16 +128,14 @@ const Employees: React.FC = () => {
        ]
     const dispatch = useDispatchCode();
     const userData = useSelectorAuth();
-    const employees = useSelectorEmployees();
+    const cartProducts = useSelectorCart();
     const theme = useTheme();
     const isPortrait = useMediaQuery(theme.breakpoints.down('sm'));
-    const columns = useMemo(() => getColumns(), [userData, employees, isPortrait]);
+    const columns = useMemo(() => getColumns(), [userData, cartProducts, isPortrait]);
 
     const [openConfirm, setOpenConfirm] = useState(false);
     const [openEdit, setFlEdit] = useState(false);
     const [openDetails, setFlDetails] = useState(false);
-    const [openProductDetails, setFlProductDetails] = useState(false);
-    const [selectedProduct, setSelectedProduct] = useState<Employee | null>(null);
     const title = useRef('');
     const content = useRef('');
     const employeeId = useRef('');
@@ -141,14 +149,14 @@ const Employees: React.FC = () => {
     }
     function getColumnsFromLandscape(): GridColDef[]{
         let res: GridColDef[] = columnsCommon;
-        if (userData && userData.role == 'admin') {
+        if (userData && userData.role == 'user') {
             res = res.concat(columnsAdmin);
         }
         return res;
     }
     function removeEmployee(id: any) {
         title.current = "Remove Employee object?";
-        const employee = employees.find(empl => empl.id == id);
+        const employee = cartProducts.find(empl => empl.id == id);
         content.current = `You are going remove employee with id ${employee?.id}`;
         employeeId.current = id;
         confirmFn.current = actualRemove;
@@ -158,7 +166,7 @@ const Employees: React.FC = () => {
         let errorMessage: string = '';
         if (isOk) {
             try {
-                await employeesService.deleteEmployee(employeeId.current);
+                await ordersService.deleteProducts(employeeId.current);
             } catch (error: any) {
                 errorMessage = error;
             }
@@ -184,7 +192,7 @@ const Employees: React.FC = () => {
 
         if (isOk) {
             try {
-                await employeesService.updateEmployee(employee.current!);
+                await ordersService.updateProducts(employee.current!);
             } catch (error: any) {
                 errorMessage = error
             }
@@ -201,25 +209,17 @@ const Employees: React.FC = () => {
         }
         setFlDetails(false)
     }
-    function getCardButton(userData:UserData, employee:Employee|null): ReactNode {
-        let res: ReactNode;
-        if (userData && userData.role == 'user') {
-            res = <Button style={{textAlign:'center', justifyContent:'center'}} 
-            onClick={() => ordersService.addProdToCart(employee, userData.email, 1)}>Add to cart</Button>;
-        }
-        return res;
-    }
     
     return <Box sx={{
         display: 'flex', justifyContent: 'center',
         alignContent: 'center'
     }}>
-        {/* <Box sx={{ height: '80vh', width: '95vw' }}>
-            <DataGrid columns={columns} rows={employees} />
-        </Box> */}
+        <Box sx={{ height: '80vh', width: '95vw' }}>
+            <DataGrid columns={columns} rows={cartProducts} />
+        </Box>
         <Confirmation confirmFn={confirmFn.current} open={openConfirm}
             title={title.current} content={content.current}></Confirmation>
-        {/* <Modal
+        <Modal
             open={openEdit}
             onClose={() => setFlEdit(false)}
             aria-labelledby="modal-modal-title"
@@ -228,8 +228,8 @@ const Employees: React.FC = () => {
             <Box sx={style}>
                 <EmployeeForm submitFn={updateEmployee} employeeUpdated={employee.current} />
             </Box>
-        </Modal> */}
-        {/* <Modal
+        </Modal>
+        <Modal
             open={openDetails}
             onClose={() => setFlDetails(false)}
             aria-labelledby="modal-modal-title"
@@ -238,80 +238,7 @@ const Employees: React.FC = () => {
             <Box sx={style}>
                 <EmployeeCard actionFn={cardAction} employee={employee.current!} />
             </Box>
-        </Modal> */}
-        
-        <Grid container spacing={3}>
-            {employees.map(e =>
-                <Grid item xs={6} sm={3} lg={2} key={e.id}>
-                    <Card sx={{ maxWidth: '100', maxHeight: '200', display: 'flex', flexDirection: 'column', alignItems: 'center', }}
-                         >
-                        <div onClick={() => setSelectedProduct(e)}>
-                        <CardMedia
-                            height='200'
-                            component="img"
-                            src={e.imageLink}
-                            alt="Producth"
-                            sx={{ objectFit: 'contain' }}
-                        />
-                        <CardContent>
-                            <Typography variant="h5" color="text.secondary" textAlign="center">
-                                {e.price} -
-                            </Typography>
-                            <Typography variant="body1" color="text.secondary" textAlign="center">
-                                {e.name}
-                            </Typography>
-                            <Typography variant="body2" color="text.secondary" textAlign="center">
-                                {e.category}  {e.unit}
-                            </Typography>
-                        </CardContent>
-                        </div>
-                        {getCardButton(userData,e)}
-                    </Card>
-                </Grid>)}
-        </Grid>
-        {/* <Modal
-            open={openProductDetails}
-            onClose={() => setFlProductDetails(false)}
-            aria-labelledby="modal-modal-title"
-            aria-describedby="modal-modal-description"
-        >
-            <Box sx={style}>
-                <EmployeeCard actionFn={cardProductAction} employee={employee.current!} />
-            </Box>
-        </Modal> */}
-        <Modal open={!!selectedProduct}
-        onClose={() => setSelectedProduct(null)}
-        aria-labelledby="modal-modal-title"
-        aria-describedby="modal-modal-description">
-            
-            <Card sx={{ maxWidth: '100', maxHeight: '200', display: 'flex', flexDirection: 'column', alignItems: 'center'}}
-                         >
-                <CardMedia
-                    component="img"
-                    alt={selectedProduct?.name}
-                    height="500"
-                    image={selectedProduct?.imageLink}
-                    sx={{ objectFit: 'contain' }}
-                />
-                 <div onClick={() => setSelectedProduct(selectedProduct)}>
-                 <CardContent sx={{ maxWidth: '100', maxHeight: '200', display: 'flex', flexDirection: 'column', alignItems: 'center'}}>
-                            <Typography variant="h5" color="text.secondary">
-                            {selectedProduct?.category} {selectedProduct?.name}
-                            </Typography>
-                            <Typography variant="body1" color="text.secondary">
-                               {selectedProduct?.description}
-                            </Typography>
-                            <Typography variant="body1" color="text.secondary">
-                                {selectedProduct?.unit}
-                            </Typography>
-                            <Typography variant="h5" color="text.secondary">
-                                price:{selectedProduct?.price} -
-                            </Typography>
-                        </CardContent>
-                        </div>
-                        {getCardButton(userData,selectedProduct)}
-            </Card>    
-            </Modal>
-    </Box>
+        </Modal>
+        </Box>
 }
-export default Employees;
+export default Cart;

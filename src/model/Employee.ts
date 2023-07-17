@@ -7,8 +7,11 @@ type Employee  = {
     price: number,
     description: string,
     unit: string,
-    imageLink: string
+    imageLink: string,
     //gender: 'male' | 'female'
+    quantity?:number,
+    serial?:number
+
 
 }
 export default Employee;

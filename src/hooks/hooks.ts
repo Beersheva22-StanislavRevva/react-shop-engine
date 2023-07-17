@@ -5,7 +5,7 @@ import { codeActions } from "../redux/slices/codeSlice";
 import { useEffect, useState } from "react";
 import Employee from "../model/Employee";
 import { Subscription } from "rxjs";
-import { employeesService } from "../config/service-config";
+import { employeesService, ordersService } from "../config/service-config";
 
 export function useDispatchCode() {
     const dispatch = useDispatch();
@@ -46,4 +46,26 @@ export function useSelectorEmployees() {
         return () => subscription.unsubscribe();
     }, []);
     return employees;
+}
+export function useSelectorCart() {
+    const dispatch = useDispatchCode();
+    const [cartProducts, setcartProducts] = useState<Employee[]>([]);
+    useEffect(() => {
+
+        const subscription: Subscription = ordersService.getProducts()
+            .subscribe({
+                next(emplArray: Employee[] | string) {
+                    let errorMessage: string = '';
+                    if (typeof emplArray === 'string') {
+                        errorMessage = emplArray;
+                    } else {
+                        setcartProducts(emplArray/*.map(e => e /*({ ...e, birthDate: new Date(e.birthDate) }))*/);
+                    }
+                    dispatch(errorMessage, '');
+
+                }
+            });
+        return () => subscription.unsubscribe();
+    }, []);
+    return cartProducts;
 }

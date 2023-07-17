@@ -6,6 +6,7 @@ import LoginData from "../../model/LoginData";
 import { authService } from "../../config/service-config";
 import UserData from "../../model/UserData";
 import SignInForm from "../forms/SignInForm";
+import OrdersServiceFire from "../../service/crud/OrdersServiceFire";
 const SignIn: React.FC = () => {
     const dispatch = useDispatch();
     async function submitFn(loginData: LoginData): Promise<InputResult> {
@@ -15,6 +16,9 @@ const SignIn: React.FC = () => {
         try {
             const res: UserData = await authService.login(loginData);
             res && dispatch(authActions.set(res));
+            if (res?.role === 'user') {
+                const userCartService = new OrdersServiceFire();
+            }
             inputResult = {status: res ? 'success' : 'error',
             message: res ? '' : 'Incorrect Credentials'}
             

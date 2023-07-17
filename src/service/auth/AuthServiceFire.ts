@@ -16,10 +16,13 @@ export default class AuthServiceFire implements AuthService {
     }
     private auth = getAuth(appFirebase);
     private administrators = collection(getFirestore(appFirebase), 'administrators');
+    private users = collection(getFirestore(appFirebase), 'users');
+    
     private async isAdmin(uid: any): Promise<boolean> {
         const docRef = doc(this.administrators, uid)
         return (await getDoc(docRef)).exists();
     }
+    
     async login(loginData: LoginData): Promise<UserData> {
         let userData: UserData = null;
         try {
@@ -33,6 +36,7 @@ export default class AuthServiceFire implements AuthService {
         } catch (error: any) {
             console.log(error.code, error)
         }
+        
         return userData;
     }
     logout(): Promise<void> {

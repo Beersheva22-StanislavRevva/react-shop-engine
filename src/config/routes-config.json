@@ -1,6 +1,7 @@
 {
     "always": [{"to": "/", "label": "Products", "order":1}],
-    "authenticated": [{"to": "/signout", "label": "Sign Out","order":1000}
+    "authenticated": [{"to": "/cart", "label": "Shopping Cart","order":2},
+                      {"to": "/signout", "label": "Sign Out","order":1000}
      ],
      "admin": [{"to": "/employees/edit", "label": "Product Editor", "order":2},
                 {"to": "/employees/add", "label": "Add Product", "order":4}
