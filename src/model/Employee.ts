@@ -10,7 +10,8 @@ type Employee  = {
     imageLink: string,
     //gender: 'male' | 'female'
     quantity?:number,
-    serial?:number
+    serial?:number,
+    sum?:number
 
 
 }

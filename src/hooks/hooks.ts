@@ -52,7 +52,7 @@ export function useSelectorCart() {
     const [cartProducts, setcartProducts] = useState<Employee[]>([]);
     useEffect(() => {
 
-        const subscription: Subscription = ordersService.getProducts()
+        const subscription: Subscription = ordersService.getCartProducts()
             .subscribe({
                 next(emplArray: Employee[] | string) {
                     let errorMessage: string = '';

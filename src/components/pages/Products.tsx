@@ -1,15 +1,15 @@
-import { Box,  Button,  Card, CardActions,  CardContent,  CardMedia,  Dialog,  DialogContent,  DialogTitle,  Grid,  Modal, Typography, useMediaQuery, useTheme } from "@mui/material"
+import { Box,  Button,  Card, CardActions,  CardContent,  CardMedia,  Dialog,  DialogContent,  DialogTitle,  Grid,  IconButton,  Modal, Typography, useMediaQuery, useTheme } from "@mui/material"
 import { useState, useEffect, useRef, useMemo, ReactNode } from "react";
 import Employee from "../../model/Employee";
 import { employeesService,ordersService } from "../../config/service-config";
 import { Subscription } from 'rxjs';
 import { DataGrid, GridActionsCellItem, GridColDef } from "@mui/x-data-grid";
-import { Delete, Details, Edit, Man, Visibility, Woman } from "@mui/icons-material";
+import { Delete, Details, Edit, Man, Visibility, Woman, AddShoppingCartOutlined, RemoveShoppingCartOutlined } from "@mui/icons-material";
 import { useSelectorAuth } from "../../redux/store";
 import { Confirmation } from "../common/Confirmation";
 import { EmployeeForm } from "../forms/EmployeeForm";
 import InputResult from "../../model/InputResult";
-import { useDispatchCode, useSelectorEmployees } from "../../hooks/hooks";
+import { useDispatchCode, useSelectorCart, useSelectorEmployees } from "../../hooks/hooks";
 import EmployeeCard from "../cards/EmployeeCard";
 import UserData from "../../model/UserData";
 import { log } from "console";
@@ -133,6 +133,7 @@ const Employees: React.FC = () => {
     const employeeId = useRef('');
     const confirmFn = useRef<any>(null);
     const employee = useRef<Employee | undefined>();
+    const cartProducts = useSelectorCart();
     
     
     function getColumns(): GridColDef[] {
@@ -201,11 +202,23 @@ const Employees: React.FC = () => {
         }
         setFlDetails(false)
     }
-    function getCardButton(userData:UserData, employee:Employee|null): ReactNode {
+    function getCardIncButton(userData:UserData, employee:Employee|null): ReactNode {
         let res: ReactNode;
         if (userData && userData.role == 'user') {
-            res = <Button style={{textAlign:'center', justifyContent:'center'}} 
-            onClick={() => ordersService.addProdToCart(employee, userData.email, 1)}>Add to cart</Button>;
+            res = <IconButton style={{textAlign:'center', justifyContent:'center'}} 
+            onClick={() => ordersService.addProdToCart(employee, userData.email, 1)}
+            aria-label="add to cart" ><AddShoppingCartOutlined/></IconButton>;
+            
+        }
+        return res;
+    }
+    function getCardDecButton(userData:UserData, employee:Employee|null): ReactNode {
+        let res: ReactNode;
+        if (userData && userData.role == 'user') {
+            res = <IconButton style={{textAlign:'center', justifyContent:'center'}} 
+            onClick={() => ordersService.addProdToCart(employee, userData.email, -1)}
+            aria-label="remove from cart" ><RemoveShoppingCartOutlined/></IconButton>;
+            
         }
         return res;
     }
@@ -265,7 +278,13 @@ const Employees: React.FC = () => {
                             </Typography>
                         </CardContent>
                         </div>
-                        {getCardButton(userData,e)}
+                        <Box sx={{display: 'flex', flexDirection: 'row', marginBottom: '1vh'}}>
+                        {getCardIncButton(userData,e)}
+                        <div style={{ marginTop: "0.5vh", fontSize: "larger", fontWeight: "bold" }}>
+                    {cartProducts.find(el=> el.id == e.id)?.quantity}
+                </div>
+                        {getCardDecButton(userData,e)}
+                        </Box>
                     </Card>
                 </Grid>)}
         </Grid>
@@ -291,7 +310,8 @@ const Employees: React.FC = () => {
                     alt={selectedProduct?.name}
                     height="500"
                     image={selectedProduct?.imageLink}
-                    sx={{ objectFit: 'contain' }}
+                    sx={{ objectFit: 'scale-down' }}
+
                 />
                  <div onClick={() => setSelectedProduct(selectedProduct)}>
                  <CardContent sx={{ maxWidth: '100', maxHeight: '200', display: 'flex', flexDirection: 'column', alignItems: 'center'}}>
@@ -309,7 +329,10 @@ const Employees: React.FC = () => {
                             </Typography>
                         </CardContent>
                         </div>
-                        {getCardButton(userData,selectedProduct)}
+                        <Box sx={{display: 'flex', flexDirection: 'row', marginBottom: '1vh'}}>
+                        {getCardIncButton(userData,selectedProduct)}
+                        {getCardDecButton(userData,selectedProduct)}
+                        </Box>
             </Card>    
             </Modal>
     </Box>

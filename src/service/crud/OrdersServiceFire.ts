@@ -44,13 +44,11 @@ export default class OrdersServiceFire implements OrdersService {
         const docRef = this.getDocRef(empl?.id);
         let employee;
         if (!isExist) {
-            const length: number = (await getDocs(this.collectionRef)).size;
-            employee = { ...empl, quantity: quantity, serial: (length + 1) }
+            employee = { id: empl?.id, quantity: quantity}
         } else {
             const employeeRecent = await getDoc(docRef);
             const quant = employeeRecent.get("quantity");
-            const serial = employeeRecent.get("serial");
-            employee = { ...empl, quantity: (quant + 1), serial: (serial) }
+            employee = { id: empl?.id, quantity: (quant + quantity)}
         }
         try {
             await setDoc(docRef, employee);
@@ -62,14 +60,14 @@ export default class OrdersServiceFire implements OrdersService {
 
     }
     
-    getProducts(): Observable<string | Employee[]> {
+    getCartProducts(): Observable<string | any[]> {
         return collectionData(this.collectionRef).pipe(catchError(error => {
             const firestorError: FirestoreError = error;
             const errorMessage = getErrorMessage(firestorError);
             return of(errorMessage)
-        })) as Observable<string | Employee[]>
+        })) as Observable<string | any[]>
     }
-    async deleteProducts(id: any): Promise<void> {
+    async deleteCartProducts(id: any): Promise<void> {
         const docRef = this.getDocRef(id);
         if (!(await this.exists(id))) {
             throw 'not found';
@@ -82,7 +80,7 @@ export default class OrdersServiceFire implements OrdersService {
             throw errorMessage;
         }
     }
-    async updateProducts(empl: Employee): Promise<Employee> {
+    async updateCartProducts(empl: Employee): Promise<Employee> {
         if (!empl.id || !(await this.exists(empl.id))) {
             throw 'not found';
         }

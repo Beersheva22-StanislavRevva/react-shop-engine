@@ -1,11 +1,11 @@
-import { Box,  Button,  Modal, useMediaQuery, useTheme } from "@mui/material"
+import { Box,  Button,  Modal, Typography, useMediaQuery, useTheme } from "@mui/material"
 import { useState, useEffect, useRef, useMemo, ReactNode } from "react";
 import Employee from "../../model/Employee";
 import { employeesService, ordersService } from "../../config/service-config";
 import { Subscription } from 'rxjs';
 import { DataGrid, GridActionsCellItem, GridColDef } from "@mui/x-data-grid";
 
-import { Delete, Details, Edit, Man, Visibility, Woman } from "@mui/icons-material";
+import { DeleteOutline, AddCircleOutline, RemoveCircleOutline, Details, Edit, Man, Visibility, Woman } from "@mui/icons-material";
 import { useSelectorAuth } from "../../redux/store";
 import { Confirmation } from "../common/Confirmation";
 import { EmployeeForm } from "../forms/EmployeeForm";
@@ -14,10 +14,10 @@ import { useDispatchCode, useSelectorCart, useSelectorEmployees } from "../../ho
 import EmployeeCard from "../cards/EmployeeCard";
 import UserData from "../../model/UserData";
 const columnsCommon: GridColDef[] = [
-    {
-        field: 'serial', headerName: '#', flex: 0.3, headerClassName: 'data-grid-header',
-        align: 'center', headerAlign: 'center'
-    },
+    // {
+    //     field: 'serial', headerName: '#', flex: 0.3, headerClassName: 'data-grid-header',
+    //     align: 'center', headerAlign: 'center'
+    // },
     {
         field: 'id', headerName: 'ID', flex: 0.3, headerClassName: 'data-grid-header',
         align: 'center', headerAlign: 'center'
@@ -44,6 +44,10 @@ const columnsCommon: GridColDef[] = [
     },
     {
         field: 'quantity', headerName: 'Quantity', type: 'number', flex: 0.3, headerClassName: 'data-grid-header',
+        align: 'center', headerAlign: 'center'
+    },
+    {
+        field: 'sum', headerName: 'Sum', type: 'number', flex: 0.3, headerClassName: 'data-grid-header',
         align: 'center', headerAlign: 'center'
     },
     {
@@ -86,20 +90,26 @@ const Cart: React.FC = () => {
         {
             field: 'actions', type: "actions", getActions: (params) => {
                 return [
-                    <GridActionsCellItem label="remove" icon={<Delete />}
+                    <GridActionsCellItem label="remove" icon={<AddCircleOutline />}
+                        onClick={() => updateQuantity(params.row, 1)
+                        } />,
+                    <GridActionsCellItem label="remove" icon={<RemoveCircleOutline />}
+                        onClick={() => updateQuantity(params.row, -1)
+                        } />,
+                    <GridActionsCellItem label="remove" icon={<DeleteOutline />}
                         onClick={() => removeEmployee(params.id)
                         } />,
-                    <GridActionsCellItem label="update" icon={<Edit />}
-                        onClick={() => {
-                            employeeId.current = params.id as any;
-                            if (params.row) {
-                                const empl = params.row;
-                                empl && (employee.current = empl);
-                                setFlEdit(true)
-                            }
+                    // <GridActionsCellItem label="update" icon={<Edit />}
+                    //     onClick={() => {
+                    //         employeeId.current = params.id as any;
+                    //         if (params.row) {
+                    //             const empl = params.row;
+                    //             empl && (employee.current = empl);
+                    //             setFlEdit(true)
+                    //         }
     
-                        }
-                        } />
+                    //     }
+                    //     } />
                 ] ;
             }
         }
@@ -129,6 +139,7 @@ const Cart: React.FC = () => {
     const dispatch = useDispatchCode();
     const userData = useSelectorAuth();
     const cartProducts = useSelectorCart();
+    const employees = useSelectorEmployees();
     const theme = useTheme();
     const isPortrait = useMediaQuery(theme.breakpoints.down('sm'));
     const columns = useMemo(() => getColumns(), [userData, cartProducts, isPortrait]);
@@ -141,7 +152,7 @@ const Cart: React.FC = () => {
     const employeeId = useRef('');
     const confirmFn = useRef<any>(null);
     const employee = useRef<Employee | undefined>();
-    
+    let totalSum = cartProducts.length === 0 ? 0: getDataGridContent(employees, cartProducts).map(e => e.sum || 0).reduce((acc,cur) => acc + cur);
     
     function getColumns(): GridColDef[] {
         
@@ -149,10 +160,8 @@ const Cart: React.FC = () => {
     }
     function getColumnsFromLandscape(): GridColDef[]{
         let res: GridColDef[] = columnsCommon;
-        if (userData && userData.role == 'user') {
-            res = res.concat(columnsAdmin);
-        }
-        return res;
+         res = res.concat(columnsAdmin);
+    return res;
     }
     function removeEmployee(id: any) {
         title.current = "Remove Employee object?";
@@ -166,7 +175,7 @@ const Cart: React.FC = () => {
         let errorMessage: string = '';
         if (isOk) {
             try {
-                await ordersService.deleteProducts(employeeId.current);
+                await ordersService.deleteCartProducts(employeeId.current);
             } catch (error: any) {
                 errorMessage = error;
             }
@@ -187,12 +196,13 @@ const Cart: React.FC = () => {
         return Promise.resolve(res);
     }
     async function actualUpdate(isOk: boolean) {
+        
        
         let errorMessage: string = '';
 
         if (isOk) {
             try {
-                await ordersService.updateProducts(employee.current!);
+                await ordersService.updateCartProducts(employee.current!);
             } catch (error: any) {
                 errorMessage = error
             }
@@ -209,13 +219,58 @@ const Cart: React.FC = () => {
         }
         setFlDetails(false)
     }
+    async function updateQuantity (empl:any, newQuant:number): Promise<void> {
+        const quantity= empl.quantity || 0;
+        const emplCopy = { ...empl};
+        let errorMessage: string = '';
+        if (newQuant === 1) {
+         emplCopy.quantity = quantity + 1;
+         } else {
+         emplCopy.quantity = quantity - 1;
+        }
+        emplCopy.sum = emplCopy.price * emplCopy.quantity;
+        try {
+            await ordersService.updateCartProducts(emplCopy!);
+        } catch (error: any) {
+            errorMessage = error;
+        }
+    dispatch(errorMessage, '');
+    }
     
+    function getDataGridContent (employees:Employee[], cartProducts:Employee[]):any[] {
+        const res = cartProducts.map(e => {
+            const employee = employees.find(el => el.id == e.id);
+            return {...e, 
+                category: employee?.category,
+                name: employee?.name,
+                description: employee?.description,
+                unit:employee?.unit,
+                imageLink:employee?.imageLink,
+                price: employee?.price,                
+                sum: ((employees.find(el => el.id == e.id)?.price)||0) * (e.quantity||0)}
+        });
+        return res;
+    }
+
     return <Box sx={{
-        display: 'flex', justifyContent: 'center',
+        display: 'flex', flexDirection: "column", justifyContent: 'center',
         alignContent: 'center'
     }}>
-        <Box sx={{ height: '80vh', width: '95vw' }}>
-            <DataGrid columns={columns} rows={cartProducts} />
+        <Box sx={{ height: '79vh', width: '95vw' }}>
+            <DataGrid columns={columns} rows={getDataGridContent(employees, cartProducts)} />
+        </Box>
+        <Box sx={{
+            height: '10vh', width: '95vw', marginTop: '1vh',
+            display: 'flex', flexDirection: "col", justifyContent: 'right',
+            alignContent: 'center', gap: '2vw'
+        }}>
+            <Box sx={{ justifyContent: 'center', alignContent: 'center' }}>
+                <div style={{ marginTop: "0.5vh", fontSize: "larger", fontWeight: "bold" }}>
+                    Total Sum: {totalSum}
+                </div>
+            </Box>
+            <Button style={{ textAlign: 'center', fontWeight: "bold", fontSize: "larger", justifyContent: 'center', height: '5vh' }}
+                onClick={() => console.log("Order clicked")}>Order Now</Button>;
         </Box>
         <Confirmation confirmFn={confirmFn.current} open={openConfirm}
             title={title.current} content={content.current}></Confirmation>
@@ -228,6 +283,7 @@ const Cart: React.FC = () => {
             <Box sx={style}>
                 <EmployeeForm submitFn={updateEmployee} employeeUpdated={employee.current} />
             </Box>
+
         </Modal>
         <Modal
             open={openDetails}
@@ -239,6 +295,6 @@ const Cart: React.FC = () => {
                 <EmployeeCard actionFn={cardAction} employee={employee.current!} />
             </Box>
         </Modal>
-        </Box>
+    </Box>
 }
 export default Cart;
