@@ -17,6 +17,9 @@ import { collectionData } from 'rxfire/firestore';
 import { getRandomInt } from '../../util/random';
 import { getISODateStr } from '../../util/date-functions';
 import OrdersService from './OrdersService';
+import { useSelectorAuth } from '../../redux/store';
+import Order from '../../model/Order';
+import CartItem from '../../model/CartItem';
 const MIN_ID = 100000;
 const MAX_ID = 1000000;
 
@@ -37,11 +40,13 @@ function getErrorMessage(firestoreError: FirestoreError): string {
     return errorMessage;
 }
 export default class OrdersServiceFire implements OrdersService {
-    collectionRef: CollectionReference = collection(getFirestore(appFirebase), 'users/VlfiDBrthJcjq1Q1ecEFU0izFIU2/cart');
+    collectionCartRef: CollectionReference = collection(getFirestore(appFirebase), 'users/VlfiDBrthJcjq1Q1ecEFU0izFIU2/cart');
+    collectionOrdersRef: CollectionReference = collection(getFirestore(appFirebase), 'orders');
+    
    
     async addProdToCart(empl: Employee | null, email: string, quantity: number): Promise<void> {
         const isExist = await this.exists(empl?.id);
-        const docRef = this.getDocRef(empl?.id);
+        const docRef = this.getCartDocRef(empl?.id);
         let employee;
         if (!isExist) {
             employee = { id: empl?.id, quantity: quantity}
@@ -61,14 +66,14 @@ export default class OrdersServiceFire implements OrdersService {
     }
     
     getCartProducts(): Observable<string | any[]> {
-        return collectionData(this.collectionRef).pipe(catchError(error => {
+        return collectionData(this.collectionCartRef).pipe(catchError(error => {
             const firestorError: FirestoreError = error;
             const errorMessage = getErrorMessage(firestorError);
             return of(errorMessage)
         })) as Observable<string | any[]>
     }
-    async deleteCartProducts(id: any): Promise<void> {
-        const docRef = this.getDocRef(id);
+    async deleteCartProduct(id: any): Promise<void> {
+        const docRef = this.getCartDocRef(id);
         if (!(await this.exists(id))) {
             throw 'not found';
         }
@@ -80,12 +85,12 @@ export default class OrdersServiceFire implements OrdersService {
             throw errorMessage;
         }
     }
-    async updateCartProducts(empl: Employee): Promise<Employee> {
+    async updateCartProduct(empl: Employee): Promise<Employee> {
         if (!empl.id || !(await this.exists(empl.id))) {
             throw 'not found';
         }
         const employee = convertEmployee(empl);
-        const docRef = this.getDocRef(empl.id);
+        const docRef = this.getCartDocRef(empl.id);
         try {
             await setDoc(docRef, employee);
         } catch (error: any) {
@@ -97,11 +102,16 @@ export default class OrdersServiceFire implements OrdersService {
     }
     
     
-    private getDocRef(id: string): DocumentReference {
-        return doc(this.collectionRef, id);
+    private getCartDocRef(id: string): DocumentReference {
+        return doc(this.collectionCartRef, id);
     }
+
+    private getOrderDocRef(id: string): DocumentReference {
+        return doc(this.collectionOrdersRef, id);
+    }
+
     private async exists(id: string): Promise<boolean> {
-        const docRef: DocumentReference = this.getDocRef(id);
+        const docRef: DocumentReference = this.getCartDocRef(id);
         const docSnap = await getDoc(docRef);
         return docSnap.exists();
     }
@@ -112,5 +122,39 @@ export default class OrdersServiceFire implements OrdersService {
         } while (await this.exists(id));
         return id;
     }
+    clearCart(cartItems:CartItem[]):void {
+        cartItems.forEach(e => this.deleteCartProduct(e.id));
+    }
     
+   async addOrder(cartItems:CartItem[], adress:string, phone:string, totalSum:number, email?:string,):Promise<void> {
+        
+        const cartItemsFixed = cartItems.map(e=>e);
+        const date = String(new Date());
+        const id = 1;
+        const order = {id:id,
+                       cartItems:cartItemsFixed,
+                       dateTime: date,
+                       totalSum: totalSum,
+                       email: email,
+                       adress: adress,
+                       phone: phone,
+                       status: 'created'                       
+                      }
+        
+        const docRef = this.getOrderDocRef(String(id));
+        try {
+            await setDoc(docRef, order);
+        } catch (error: any) {
+            const firestorError: FirestoreError = error;
+            const errorMessage = getErrorMessage(firestorError);
+            throw errorMessage;
+        }
+    }
+    getOrders(): Observable<string | any[]> {
+          return collectionData(this.collectionOrdersRef).pipe(catchError(error => {
+            const firestorError: FirestoreError = error;
+            const errorMessage = getErrorMessage(firestorError);
+            return of(errorMessage)
+        })) as Observable<string | any[]>
+    }
 }

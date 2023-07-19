@@ -1,12 +1,13 @@
 {
     "always": [{"to": "/", "label": "Products", "order":1}],
-    "authenticated": [{"to": "/cart", "label": "Shopping Cart","order":2},
-                      {"to": "/signout", "label": "Sign Out","order":1000}
+    "authenticated": [{"to": "/orders", "label": "Orders","order":3},
+                    {"to": "/signout", "label": "Sign Out","order":1000}
+                     
      ],
-     "admin": [{"to": "/employees/edit", "label": "Product Editor", "order":2},
-                {"to": "/employees/add", "label": "Add Product", "order":4}
+     "admin": [{"to": "/employees/edit", "label": "Product Editor", "order":4},
+                {"to": "/employees/add", "label": "Add Product", "order":5}
     ],
-     "noadmin": [],
+     "noadmin": [{"to": "/cart", "label": "Shopping Cart","order":2}],
      "noauthenticated": [{"to": "/signin", "label": "Sign In", "order": 2}],
-     "developmentAdmin": [{"to": "/generation", "label": "Generate Employees", "order":20}]
+     "developmentAdmin": []
 }

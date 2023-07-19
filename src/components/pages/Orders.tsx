@@ -5,12 +5,12 @@ import { employeesService, ordersService } from "../../config/service-config";
 import { Subscription } from 'rxjs';
 import { DataGrid, GridActionsCellItem, GridColDef } from "@mui/x-data-grid";
 
-import { DeleteOutline, AddCircleOutline, RemoveCircleOutline, Details, Edit, Man, Visibility, Woman } from "@mui/icons-material";
+import { DeleteOutline, InventoryOutlined, HighlightOffOutlined, Visibility} from "@mui/icons-material";
 import { useSelectorAuth } from "../../redux/store";
 import { Confirmation } from "../common/Confirmation";
 import { EmployeeForm } from "../forms/EmployeeForm";
 import InputResult from "../../model/InputResult";
-import { useDispatchCode, useSelectorCart, useSelectorEmployees } from "../../hooks/hooks";
+import { useDispatchCode, useSelectorCart, useSelectorEmployees, useSelectorOrders } from "../../hooks/hooks";
 import EmployeeCard from "../cards/EmployeeCard";
 import UserData from "../../model/UserData";
 import CartItem from "../../model/CartItem";
@@ -23,54 +23,33 @@ const columnsCommon: GridColDef[] = [
         field: 'id', headerName: 'ID', flex: 0.3, headerClassName: 'data-grid-header',
         align: 'center', headerAlign: 'center'
     },
+    
     {
-        field: 'category', headerName: 'Category', flex: 0.4, headerClassName: 'data-grid-header',
+        field: 'dateTime', headerName: 'Creation Time', flex: 0.7, headerClassName: 'data-grid-header',
         align: 'center', headerAlign: 'center'
     },
     {
-        field: 'name', headerName: 'Name', flex: 0.6, headerClassName: 'data-grid-header',
+        field: 'email', headerName: 'Email', flex: 0.5, headerClassName: 'data-grid-header',
         align: 'center', headerAlign: 'center'
     },
     {
-        field: 'description', headerName: 'Description', flex: 0.7, headerClassName: 'data-grid-header',
+        field: 'adress', headerName: 'Adress', flex: 0.7, headerClassName: 'data-grid-header',
         align: 'center', headerAlign: 'center'
     },
     {
-        field: 'unit', headerName: 'Unit', flex: 0.3, headerClassName: 'data-grid-header',
+        field: 'phone', headerName: 'Pnone', flex: 0.5, headerClassName: 'data-grid-header',
         align: 'center', headerAlign: 'center'
     },
     {
-        field: 'price', headerName: 'Price', type: 'number', flex: 0.3, headerClassName: 'data-grid-header',
+        field: 'totalSum', headerName: 'TotalSum', type: 'number', flex: 0.3, headerClassName: 'data-grid-header',
         align: 'center', headerAlign: 'center'
     },
     {
-        field: 'quantity', headerName: 'Quantity', type: 'number', flex: 0.3, headerClassName: 'data-grid-header',
+        field: 'status', headerName: 'Status', flex: 0.5, headerClassName: 'data-grid-header',
         align: 'center', headerAlign: 'center'
     },
-    {
-        field: 'sum', headerName: 'Sum', type: 'number', flex: 0.3, headerClassName: 'data-grid-header',
-        align: 'center', headerAlign: 'center'
-    },
-    {
-        field: 'imageLink',
-        headerName: 'Image',
-        flex: 0.7,
-        headerClassName: 'data-grid-header',
-        align: 'center',
-        headerAlign: 'center',
-        renderCell: (params) => <img src={params.value} alt="product" width="50" height="50" />,
-    },
-    // {
-    //     field: 'birthDate', headerName: "Date", flex: 0.8, type: 'date', headerClassName: 'data-grid-header',
-    //     align: 'center', headerAlign: 'center'
-    // },
-        
-    // {
-    //     field: 'gender', headerName: 'Gender', flex: 0.6, headerClassName: 'data-grid-header',
-    //     align: 'center', headerAlign: 'center', renderCell: params => {
-    //         return params.value == "male" ? <Man/> : <Woman/>
-    //     }
-    // },
+    
+   
    ];
    
    
@@ -86,19 +65,19 @@ const style = {
     p: 4,
 };
 
-const Cart: React.FC = () => {
+const Orders: React.FC = () => {
     const columnsAdmin: GridColDef[] = [
         {
             field: 'actions', type: "actions", getActions: (params) => {
                 return [
-                    <GridActionsCellItem label="remove" icon={<AddCircleOutline />}
-                        onClick={() => updateQuantity(params.row, 1)
+                    // <GridActionsCellItem label="remove" icon={<AddCircleOutline />}
+                    //     onClick={() => updateQuantity(params.row, 1)
+                    //     } />,
+                    <GridActionsCellItem label="details" icon={<InventoryOutlined />}
+                        onClick={() => console.log("details clicked")
                         } />,
-                    <GridActionsCellItem label="remove" icon={<RemoveCircleOutline />}
-                        onClick={() => updateQuantity(params.row, -1)
-                        } />,
-                    <GridActionsCellItem label="remove" icon={<DeleteOutline />}
-                        onClick={() => removeEmployee(params.id)
+                    <GridActionsCellItem label="remove" icon={<HighlightOffOutlined/>}
+                        onClick={() => console.log("cancelOrder clicked")
                         } />,
                     // <GridActionsCellItem label="update" icon={<Edit />}
                     //     onClick={() => {
@@ -141,6 +120,7 @@ const Cart: React.FC = () => {
     const userData = useSelectorAuth();
     const cartProducts = useSelectorCart();
     const employees = useSelectorEmployees();
+    const orders = useSelectorOrders();
     const theme = useTheme();
     const isPortrait = useMediaQuery(theme.breakpoints.down('sm'));
     const columns = useMemo(() => getColumns(), [userData, cartProducts, isPortrait]);
@@ -265,20 +245,20 @@ const Cart: React.FC = () => {
         alignContent: 'center'
     }}>
         <Box sx={{ height: '79vh', width: '95vw' }}>
-            <DataGrid columns={columns} rows={cartContent/*etDataGridContent(employees, cartProducts)*/} />
+            <DataGrid columns={columns} rows={orders} />
         </Box>
         <Box sx={{
             height: '10vh', width: '95vw', marginTop: '1vh',
             display: 'flex', flexDirection: "col", justifyContent: 'right',
             alignContent: 'center', gap: '2vw'
         }}>
-            <Box sx={{ justifyContent: 'center', alignContent: 'center' }}>
+            {/* <Box sx={{ justifyContent: 'center', alignContent: 'center' }}>
                 <div style={{ marginTop: "0.5vh", fontSize: "larger", fontWeight: "bold" }}>
                     Total Sum: {totalSum}
                 </div>
             </Box>
             <Button style={{ textAlign: 'center', fontWeight: "bold", fontSize: "larger", justifyContent: 'center', height: '5vh' }}
-                onClick={() => createOrderFn()}>Order Now</Button>;
+                onClick={() => createOrderFn()}>Order Now</Button>; */}
         </Box>
         <Confirmation confirmFn={confirmFn.current} open={openConfirm}
             title={title.current} content={content.current}></Confirmation>
@@ -305,4 +285,4 @@ const Cart: React.FC = () => {
         </Modal>
     </Box>
 }
-export default Cart;
+export default Orders;
