@@ -71,7 +71,7 @@ const style = {
     p: 4,
 };
 
-const Employees: React.FC = () => {
+const Products: React.FC = () => {
     const columnsAdmin: GridColDef[] = [
         {
             field: 'actions', type: "actions", getActions: (params) => {
@@ -128,6 +128,7 @@ const Employees: React.FC = () => {
     const [openDetails, setFlDetails] = useState(false);
     const [openProductDetails, setFlProductDetails] = useState(false);
     const [selectedProduct, setSelectedProduct] = useState<Employee | null>(null);
+    const [buttonFl, setButtonFl] = useState<boolean>(false);
     const title = useRef('');
     const content = useRef('');
     const employeeId = useRef('');
@@ -215,10 +216,24 @@ const Employees: React.FC = () => {
     function getCardDecButton(userData:UserData, employee:Employee|null): ReactNode {
         let res: ReactNode;
         if (userData && userData.role == 'user') {
-            res = <IconButton style={{textAlign:'center', justifyContent:'center'}} 
-            onClick={() => ordersService.addProdToCart(employee, userData.email, -1)}
-            aria-label="remove from cart" ><RemoveShoppingCartOutlined/></IconButton>;
-            
+            if (cartProducts.find(el=> el.id == employee?.id)?.quantity === 1) {
+                res = <IconButton style={{textAlign:'center', justifyContent:'center'}} 
+                onClick={() => {
+                    ordersService.deleteCartProduct(employee?.id);
+                }}
+                disabled = {buttonFl}
+                aria-label="remove from cart" ><RemoveShoppingCartOutlined/></IconButton>
+            } else{ 
+                    res = <IconButton style={{textAlign:'center', justifyContent:'center'}}
+                 onClick={() => ordersService.addProdToCart(employee, userData.email, -1)}
+                aria-label="remove from cart" ><RemoveShoppingCartOutlined/></IconButton>;
+            }
+            if (!cartProducts.find(el=> el.id == employee?.id)?.quantity) {
+                res = <IconButton style={{textAlign:'center', justifyContent:'center'}}
+                disabled
+               aria-label="remove from cart" ><RemoveShoppingCartOutlined/></IconButton>;
+            }
+
         }
         return res;
     }
@@ -252,38 +267,38 @@ const Employees: React.FC = () => {
                 <EmployeeCard actionFn={cardAction} employee={employee.current!} />
             </Box>
         </Modal> */}
-        
+
         <Grid container spacing={3}>
             {employees.map(e =>
                 <Grid item xs={6} sm={3} lg={2} key={e.id}>
                     <Card sx={{ maxWidth: '100', maxHeight: '200', display: 'flex', flexDirection: 'column', alignItems: 'center', }}
-                         >
+                    >
                         <div onClick={() => setSelectedProduct(e)}>
-                        <CardMedia
-                            height='200'
-                            component="img"
-                            src={e.imageLink}
-                            alt="Producth"
-                            sx={{ objectFit: 'contain' }}
-                        />
-                        <CardContent>
-                            <Typography variant="h5" color="text.secondary" textAlign="center">
-                                {e.price} -
-                            </Typography>
-                            <Typography variant="body1" color="text.secondary" textAlign="center">
-                                {e.name}
-                            </Typography>
-                            <Typography variant="body2" color="text.secondary" textAlign="center">
-                                {e.category}  {e.unit}
-                            </Typography>
-                        </CardContent>
+                            <CardMedia
+                                height='200'
+                                component="img"
+                                src={e.imageLink}
+                                alt="Producth"
+                                sx={{ objectFit: 'contain' }}
+                            />
+                            <CardContent>
+                                <Typography variant="h5" color="text.secondary" textAlign="center">
+                                    {e.price} -
+                                </Typography>
+                                <Typography variant="body1" color="text.secondary" textAlign="center">
+                                    {e.name}
+                                </Typography>
+                                <Typography variant="body2" color="text.secondary" textAlign="center">
+                                    {e.category}  {e.unit}
+                                </Typography>
+                            </CardContent>
                         </div>
-                        <Box sx={{display: 'flex', flexDirection: 'row', marginBottom: '1vh'}}>
-                        {getCardIncButton(userData,e)}
-                        <div style={{ marginTop: "0.5vh", fontSize: "larger", fontWeight: "bold" }}>
-                    {cartProducts.find(el=> el.id == e.id)?.quantity}
-                </div>
-                        {getCardDecButton(userData,e)}
+                        <Box sx={{ display: 'flex', flexDirection: 'row', marginBottom: '1vh' }}>
+                            {getCardIncButton(userData, e)}
+                            <div style={{ marginTop: "0.5vh", fontSize: "larger", fontWeight: "bold" }}>
+                                {cartProducts.find(el => el.id == e.id)?.quantity}
+                            </div>
+                            {getCardDecButton(userData, e)}
                         </Box>
                     </Card>
                 </Grid>)}
@@ -299,12 +314,12 @@ const Employees: React.FC = () => {
             </Box>
         </Modal> */}
         <Modal open={!!selectedProduct}
-        onClose={() => setSelectedProduct(null)}
-        aria-labelledby="modal-modal-title"
-        aria-describedby="modal-modal-description">
-            
-            <Card sx={{ maxWidth: '100', maxHeight: '200', display: 'flex', flexDirection: 'column', alignItems: 'center'}}
-                         >
+            onClose={() => setSelectedProduct(null)}
+            aria-labelledby="modal-modal-title"
+            aria-describedby="modal-modal-description">
+
+            <Card sx={{ maxWidth: '100', maxHeight: '200', display: 'flex', flexDirection: 'column', alignItems: 'center' }}
+            >
                 <CardMedia
                     component="img"
                     alt={selectedProduct?.name}
@@ -313,28 +328,31 @@ const Employees: React.FC = () => {
                     sx={{ objectFit: 'scale-down' }}
 
                 />
-                 <div onClick={() => setSelectedProduct(selectedProduct)}>
-                 <CardContent sx={{ maxWidth: '100', maxHeight: '200', display: 'flex', flexDirection: 'column', alignItems: 'center'}}>
-                            <Typography variant="h5" color="text.secondary">
+                <div onClick={() => setSelectedProduct(selectedProduct)}>
+                    <CardContent sx={{ maxWidth: '100', maxHeight: '200', display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+                        <Typography variant="h5" color="text.secondary">
                             {selectedProduct?.category} {selectedProduct?.name}
-                            </Typography>
-                            <Typography variant="body1" color="text.secondary">
-                               {selectedProduct?.description}
-                            </Typography>
-                            <Typography variant="body1" color="text.secondary">
-                                {selectedProduct?.unit}
-                            </Typography>
-                            <Typography variant="h5" color="text.secondary">
-                                price:{selectedProduct?.price} -
-                            </Typography>
-                        </CardContent>
-                        </div>
-                        <Box sx={{display: 'flex', flexDirection: 'row', marginBottom: '1vh'}}>
-                        {getCardIncButton(userData,selectedProduct)}
-                        {getCardDecButton(userData,selectedProduct)}
-                        </Box>
-            </Card>    
-            </Modal>
+                        </Typography>
+                        <Typography variant="body1" color="text.secondary">
+                            {selectedProduct?.description}
+                        </Typography>
+                        <Typography variant="body1" color="text.secondary">
+                            {selectedProduct?.unit}
+                        </Typography>
+                        <Typography variant="h5" color="text.secondary">
+                            price:{selectedProduct?.price} -
+                        </Typography>
+                    </CardContent>
+                </div>
+                <Box sx={{ display: 'flex', flexDirection: 'row', marginBottom: '1vh' }}>
+                    {getCardIncButton(userData, selectedProduct)}
+                    <div style={{ marginTop: "0.5vh", fontSize: "larger", fontWeight: "bold" }}>
+                        {cartProducts.find(el => el.id == selectedProduct?.id)?.quantity}
+                    </div>
+                    {getCardDecButton(userData, selectedProduct)}
+                </Box>
+            </Card>
+        </Modal>
     </Box>
 }
-export default Employees;
+export default Products;

@@ -14,6 +14,7 @@ import { useDispatchCode, useSelectorCart, useSelectorEmployees, useSelectorOrde
 import EmployeeCard from "../cards/EmployeeCard";
 import UserData from "../../model/UserData";
 import CartItem from "../../model/CartItem";
+import Order from "../../model/Order";
 const columnsCommon: GridColDef[] = [
     // {
     //     field: 'serial', headerName: '#', flex: 0.3, headerClassName: 'data-grid-header',
@@ -28,7 +29,7 @@ const columnsCommon: GridColDef[] = [
         field: 'dateTime', headerName: 'Creation Time', flex: 0.7, headerClassName: 'data-grid-header',
         align: 'center', headerAlign: 'center'
     },
-    {
+     {
         field: 'email', headerName: 'Email', flex: 0.5, headerClassName: 'data-grid-header',
         align: 'center', headerAlign: 'center'
     },
@@ -48,9 +49,53 @@ const columnsCommon: GridColDef[] = [
         field: 'status', headerName: 'Status', flex: 0.5, headerClassName: 'data-grid-header',
         align: 'center', headerAlign: 'center'
     },
-    
-   
+     
    ];
+
+   const columnsDetails: GridColDef[] = [
+    {
+        field: 'id', headerName: 'ID', flex: 0.3, headerClassName: 'data-grid-header',
+        align: 'center', headerAlign: 'center'
+    },
+    {
+        field: 'category', headerName: 'Category', flex: 0.4, headerClassName: 'data-grid-header',
+        align: 'center', headerAlign: 'center'
+    },
+    {
+        field: 'name', headerName: 'Name', flex: 0.6, headerClassName: 'data-grid-header',
+        align: 'center', headerAlign: 'center'
+    },
+    {
+        field: 'description', headerName: 'Description', flex: 0.7, headerClassName: 'data-grid-header',
+        align: 'center', headerAlign: 'center'
+    },
+    {
+        field: 'unit', headerName: 'Unit', flex: 0.3, headerClassName: 'data-grid-header',
+        align: 'center', headerAlign: 'center'
+    },
+    {
+        field: 'price', headerName: 'Price', type: 'number', flex: 0.3, headerClassName: 'data-grid-header',
+        align: 'center', headerAlign: 'center'
+    },
+    {
+        field: 'quantity', headerName: 'Quantity', type: 'number', flex: 0.3, headerClassName: 'data-grid-header',
+        align: 'center', headerAlign: 'center'
+    },
+    {
+        field: 'sum', headerName: 'Sum', type: 'number', flex: 0.3, headerClassName: 'data-grid-header',
+        align: 'center', headerAlign: 'center'
+    },
+    {
+        field: 'imageLink',
+        headerName: 'Image',
+        flex: 0.7,
+        headerClassName: 'data-grid-header',
+        align: 'center',
+        headerAlign: 'center',
+        renderCell: (params) => <img src={params.value} alt="product" width="50" height="50" />,
+    },
+
+   ]
    
    
 const style = {
@@ -74,11 +119,17 @@ const Orders: React.FC = () => {
                     //     onClick={() => updateQuantity(params.row, 1)
                     //     } />,
                     <GridActionsCellItem label="details" icon={<InventoryOutlined />}
-                        onClick={() => console.log("details clicked")
-                        } />,
+                        
+                        onClick={() => {
+                            const cartdetails = params.row.cartItems as object[];
+                            setSelectedProduct(cartdetails);
+                        }}/>,
                     <GridActionsCellItem label="remove" icon={<HighlightOffOutlined/>}
-                        onClick={() => console.log("cancelOrder clicked")
-                        } />,
+                        onClick={() => {
+                        const orderDetails = params.row as object;
+                        setCanceledStatus(orderDetails);
+
+                    } }/>
                     // <GridActionsCellItem label="update" icon={<Edit />}
                     //     onClick={() => {
                     //         employeeId.current = params.id as any;
@@ -90,7 +141,7 @@ const Orders: React.FC = () => {
     
                     //     }
                     //     } />
-                ] ;
+                ]
             }
         }
        ]
@@ -133,7 +184,7 @@ const Orders: React.FC = () => {
     const employeeId = useRef('');
     const confirmFn = useRef<any>(null);
     const employee = useRef<Employee | undefined>();
-    
+    const [selectedProduct, setSelectedProduct] = useState<any[]>([]);
     
     function getColumns(): GridColDef[] {
         
@@ -219,8 +270,8 @@ const Orders: React.FC = () => {
     }
     
     // function getDataGridContent (employees:Employee[], cartProducts:Employee[]):CartItem[] {
-        const cartContent: CartItem[] = cartProducts.map(e => {
-            const employee = employees.find(el => el.id == e.id);
+    const cartContent: CartItem[] = cartProducts.map(e => {
+        const employee = employees.find(el => el.id == e.id);
             return {...e, 
                 category: employee?.category,
                 name: employee?.name,
@@ -237,6 +288,27 @@ const Orders: React.FC = () => {
     function createOrderFn():void {
         ordersService.addOrder(cartContent, "Beer-Sheva", "0551112222", totalSum, userData?.email);
         ordersService.clearCart(cartContent);
+
+    }
+
+    async function setCanceledStatus(orderDetails: any): Promise<void> {
+        const status = orderDetails.status;
+        let errorMessage: string = '';
+        if (status === "created") {
+            const orderDetailsCopy = {...orderDetails};
+            orderDetailsCopy.status = 'canceled';
+            try {
+                await ordersService.updateOrder(orderDetailsCopy!);
+            } catch (error: any) {
+                errorMessage = error;
+            }
+        }
+        else {
+            errorMessage = "Unable to cancel order";
+        }
+        dispatch(errorMessage, '');
+       
+       
 
     }
 
@@ -262,6 +334,15 @@ const Orders: React.FC = () => {
         </Box>
         <Confirmation confirmFn={confirmFn.current} open={openConfirm}
             title={title.current} content={content.current}></Confirmation>
+        <Modal open={selectedProduct.length > 0}
+        onClose={() => setSelectedProduct([])}
+        aria-labelledby="modal-modal-title"
+        aria-describedby="modal-modal-description"
+        >
+             <Box sx={{ height: '50vh', width: '70vw', backgroundColor:'white' }}>
+                <DataGrid columns={columnsDetails} rows={selectedProduct} />
+        </Box>
+            </Modal>                
         <Modal
             open={openEdit}
             onClose={() => setFlEdit(false)}

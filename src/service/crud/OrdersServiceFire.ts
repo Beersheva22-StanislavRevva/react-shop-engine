@@ -45,7 +45,7 @@ export default class OrdersServiceFire implements OrdersService {
     
    
     async addProdToCart(empl: Employee | null, email: string, quantity: number): Promise<void> {
-        const isExist = await this.exists(empl?.id);
+        const isExist = await this.cartExists(empl?.id);
         const docRef = this.getCartDocRef(empl?.id);
         let employee;
         if (!isExist) {
@@ -74,7 +74,7 @@ export default class OrdersServiceFire implements OrdersService {
     }
     async deleteCartProduct(id: any): Promise<void> {
         const docRef = this.getCartDocRef(id);
-        if (!(await this.exists(id))) {
+        if (!(await this.cartExists(id))) {
             throw 'not found';
         }
         try {
@@ -86,19 +86,19 @@ export default class OrdersServiceFire implements OrdersService {
         }
     }
     async updateCartProduct(empl: Employee): Promise<Employee> {
-        if (!empl.id || !(await this.exists(empl.id))) {
+        if (!empl.id || !(await this.cartExists(empl.id))) {
             throw 'not found';
         }
-        const employee = convertEmployee(empl);
+        //const employee = convertEmployee(empl);
         const docRef = this.getCartDocRef(empl.id);
         try {
-            await setDoc(docRef, employee);
+            await setDoc(docRef, empl);
         } catch (error: any) {
             const firestorError: FirestoreError = error;
             const errorMessage = getErrorMessage(firestorError);
             throw errorMessage;
         }
-        return employee;
+        return empl;
     }
     
     
@@ -110,16 +110,23 @@ export default class OrdersServiceFire implements OrdersService {
         return doc(this.collectionOrdersRef, id);
     }
 
-    private async exists(id: string): Promise<boolean> {
+    private async cartExists(id: string): Promise<boolean> {
         const docRef: DocumentReference = this.getCartDocRef(id);
         const docSnap = await getDoc(docRef);
         return docSnap.exists();
     }
+
+    private async orderExists(id: string): Promise<boolean> {
+        const docRef: DocumentReference = this.getOrderDocRef(id);
+        const docSnap = await getDoc(docRef);
+        return docSnap.exists();
+    }
+
     private async getId(): Promise<string> {
         let id: string = '';
         do {
             id = getRandomInt(MIN_ID, MAX_ID).toString();
-        } while (await this.exists(id));
+        } while (await this.cartExists(id));
         return id;
     }
     clearCart(cartItems:CartItem[]):void {
@@ -130,7 +137,7 @@ export default class OrdersServiceFire implements OrdersService {
         
         const cartItemsFixed = cartItems.map(e=>e);
         const date = String(new Date());
-        const id = 1;
+        const id = 2;
         const order = {id:id,
                        cartItems:cartItemsFixed,
                        dateTime: date,
@@ -156,5 +163,21 @@ export default class OrdersServiceFire implements OrdersService {
             const errorMessage = getErrorMessage(firestorError);
             return of(errorMessage)
         })) as Observable<string | any[]>
+    }
+    async updateOrder(order: Order): Promise<Order> {
+        const id = String(order.id);
+        if (!order.id || !(await this.orderExists(id))) {
+            throw 'not found';
+        }
+        //const employee = convertEmployee(order);
+        const docRef = this.getOrderDocRef(id);
+        try {
+            await setDoc(docRef, order);
+        } catch (error: any) {
+            const firestorError: FirestoreError = error;
+            const errorMessage = getErrorMessage(firestorError);
+            throw errorMessage;
+        }
+        return order;
     }
 }
