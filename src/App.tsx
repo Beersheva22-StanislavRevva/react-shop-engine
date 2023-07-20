@@ -25,6 +25,7 @@ import process from "process";
 import Products from "./components/pages/Products";
 import Cart from "./components/pages/Cart";
 import Orders from "./components/pages/Orders";
+import SignUp from "./components/pages/SignUp";
 const {always, authenticated, admin, noadmin, noauthenticated} = routesConfig;
 type RouteTypeOrder = RouteType & {order?: number}
 function getRoutes(userData: UserData): RouteType[] {
@@ -89,6 +90,7 @@ const App: React.FC = () => {
         element={<SalaryStatistics/>}/>
         
         <Route path="signin" element={<SignIn/>}/>
+        <Route path="signUp" element={<SignUp/>}/>
         <Route path="signout" element={<SignOut/>}/>
         <Route path="generation" element={<Generation/>}/>
         <Route path="/*" element={<NotFound/>}/>

@@ -8,20 +8,21 @@ import UserData from "../../model/UserData";
 import SignInForm from "../forms/SignInForm";
 import OrdersServiceFire from "../../service/crud/OrdersServiceFire";
 import { Box } from "@mui/material";
-const SignIn: React.FC = () => {
+import SignUpForm from "../forms/SignUpForm";
+const SignUp: React.FC = () => {
     const dispatch = useDispatch();
     async function submitFn(loginData: LoginData): Promise<InputResult> {
         let inputResult: InputResult = {status: 'error',
          message: "Server unavailable, repeat later on"}
          
         try {
-            const res: UserData = await authService.login(loginData);
+            const res: UserData = await authService.addNewUser(loginData);
             res && dispatch(authActions.set(res));
             // if (res?.role === 'user') {
             //     const userCartService = new OrdersServiceFire();
             // }
             inputResult = {status: res ? 'success' : 'error',
-            message: res ? '' : 'Incorrect Credentials'}
+            message: res ? '' : 'Unuinque email, please enter another email'}
             
         } catch (error) {
             
@@ -29,11 +30,11 @@ const SignIn: React.FC = () => {
         return inputResult;
     }
     return <Box>
-    <SignInForm submitFn={submitFn}
+    <SignUpForm submitFn={submitFn}
      networks={authService.getAvailableProvider()}
          />
     </Box>
 
 }
 
- export default SignIn;
+ export default SignUp;

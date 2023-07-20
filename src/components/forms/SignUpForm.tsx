@@ -14,11 +14,10 @@ import Container from '@mui/material/Container';
 import { createTheme, ThemeProvider } from '@mui/material/styles';
 import LoginData from '../../model/LoginData';
 import InputResult from '../../model/InputResult';
-import { Alert, Divider, Modal, Snackbar, Switch } from '@mui/material';
+import { Alert, Divider, Modal, Snackbar } from '@mui/material';
 import { StatusType } from '../../model/StatusType';
 import { NetworkType } from '../../service/auth/AuthService';
-import { Route, Router, To, useNavigate } from 'react-router-dom';
-import SignUp from '../pages/SignUp';
+import { Height, HowToRegOutlined } from '@mui/icons-material';
 
 function Copyright(props: any) {
     return (
@@ -39,7 +38,7 @@ type Props = {
     submitFn: (loginData: LoginData) => Promise<InputResult>
     networks?: NetworkType[]
 }
-const SignInForm: React.FC<Props> = ({ submitFn, networks }) => {
+const SignUpForm: React.FC<Props> = ({ submitFn, networks }) => {
     const message = React.useRef<string>('');
     const [open, setOpen] = React.useState(false);
     const severity = React.useRef<StatusType>('success');
@@ -54,9 +53,7 @@ const SignInForm: React.FC<Props> = ({ submitFn, networks }) => {
         message.current && setOpen(true);
     };
     const [newReg,setNewReg] = React.useState(false);
-    const navigate = useNavigate();
-    const pathto:To = "/signUp";
-    
+
     return (
         <ThemeProvider theme={defaultTheme}>
             <Container component="main" maxWidth="xs">
@@ -70,14 +67,14 @@ const SignInForm: React.FC<Props> = ({ submitFn, networks }) => {
                         alignItems: 'center',
                     }}
                 >
-                    <Avatar sx={{ m: 1, bgcolor: 'secondary.main' }}>
-                        <LockOutlinedIcon />
+                    <Avatar sx={{ m: 1, bgcolor: 'lightgrey' }}>
+                        <HowToRegOutlined />
                     </Avatar>
                     <Typography component="h1" variant="h5">
-                        Sign in
+                        Sign Up
                     </Typography>
-                    <Box component="form" onSubmit={handleSubmit} noValidate sx={{ mt: 1 }}>
-                        <Grid container justifyContent={'center'} spacing={3}>
+                    <Box component="form" onSubmit={handleSubmit} noValidate sx={{ mt: 1 }} display={"flex"} flexDirection={"column"} justifyContent={'center'} alignContent={'center'}>
+                        <Grid container  justifyContent={'center'}  alignContent={'center'}  spacing={3}>
                             <Grid item xs={12} sm={6} md={12}>
                                 <TextField
                                     margin="normal"
@@ -111,33 +108,23 @@ const SignInForm: React.FC<Props> = ({ submitFn, networks }) => {
                                     variant="contained"
 
                                 >
-                                    Sign In
-                                </Button>
-                            </Grid>
-                            <Grid item xs={12} sm={6} md={12}>
-                                <Button
-                                    type="submit"
-                                    fullWidth
-                                    variant="outlined"
-                                    onClick={() =>  navigate('../signup')}
-                                >
-                                   New Registration
+                                   Sign Up
                                 </Button>
                             </Grid>
                             {networks && networks.length > 0 && <Grid item xs={6}  sm={6} md={6}>
                                 <Divider sx={{ width: "100%", fontWeight: "bold" }}>or</Divider>
                             <Grid item xs={12} sm={6} md={12} display={'flex'} flexDirection={'row'} justifyContent={'center'}>
-                            {networks.map(n =>  <Button key={n.providerName}
+                            {networks.map(n => 
+                            <Button key={n.providerName}
                                 onClick={() =>
-                                    submitFn({ email: n.providerName, password: '' })} variant="outlined"
-                                sx={{ mt: 2, width: '8vw', height: '8vw' }}
+                                    submitFn({ email: n.providerName, password: '' })} fullWidth variant="outlined"
+                                sx={{ mt: 1, width: '8vw', height: '8vw'}}
                             >
-
                                 <Avatar src={n.providerIconUrl} sx={{ width: { xs: '6vh', sm: '6vw', lg: '3vw' } }} />
                             </Button>)}
                             </Grid>
                             </Grid>}
-                          </Grid>
+                        </Grid>
                     </Box>
                     <Snackbar open={open} autoHideDuration={10000}
                         onClose={() => setOpen(false)}>
@@ -162,4 +149,4 @@ const SignInForm: React.FC<Props> = ({ submitFn, networks }) => {
         </ThemeProvider>
     );
 }
-export default SignInForm;
+export default SignUpForm;

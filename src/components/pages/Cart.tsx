@@ -1,4 +1,4 @@
-import { Box,  Button,  Modal, Typography, useMediaQuery, useTheme } from "@mui/material"
+import { Box,  Button,  Grid,  Modal, TextField, Typography, useMediaQuery, useTheme } from "@mui/material"
 import { useState, useEffect, useRef, useMemo, ReactNode } from "react";
 import Employee from "../../model/Employee";
 import { employeesService, ordersService } from "../../config/service-config";
@@ -148,6 +148,7 @@ const Cart: React.FC = () => {
     const [openConfirm, setOpenConfirm] = useState(false);
     const [openEdit, setFlEdit] = useState(false);
     const [openDetails, setFlDetails] = useState(false);
+    const [openOrderDetails, setOpenOrderDetails] = useState(false);
     const title = useRef('');
     const content = useRef('');
     const employeeId = useRef('');
@@ -254,10 +255,25 @@ const Cart: React.FC = () => {
         // return res;
     // }
 
+    
+    
     function createOrderFn():void {
-        ordersService.addOrder(cartContent, "Beer-Sheva", "0551112222", totalSum, userData?.email);
-        ordersService.clearCart(cartContent);
+        setOpenOrderDetails(true);
 
+    }
+    let adress:string;
+    let phone:string;
+    let handlerAdress = (event:any) => {
+        adress = event.target.value
+    }
+    let handlerPhone = (event:any) => {
+        phone = String(event.target.value);
+    }
+    function orderDetailsClick (event:any) : void  {
+       event.preventDefault();
+       ordersService.addOrder(cartContent, adress, phone, totalSum, userData?.email);
+       setOpenOrderDetails(false);
+       ordersService.clearCart(cartContent); 
     }
 
     return <Box sx={{
@@ -278,11 +294,40 @@ const Cart: React.FC = () => {
                 </div>
             </Box>
             <Button style={{ textAlign: 'center', fontWeight: "bold", fontSize: "larger", justifyContent: 'center', height: '5vh' }}
-                onClick={() => createOrderFn()}>Order Now</Button>;
+                onClick={() => setOpenOrderDetails(true)}>Order Now</Button>;
         </Box>
         <Confirmation confirmFn={confirmFn.current} open={openConfirm}
             title={title.current} content={content.current}></Confirmation>
         <Modal
+         open = {openOrderDetails}
+         onClose={() => setOpenOrderDetails(false)}
+         aria-labelledby="modal-modal-title"
+         aria-describedby="modal-modal-description">
+             <Box sx={{ height: '50vh', width: '70vw', backgroundColor:'white' }}>
+                <form onSubmit={orderDetailsClick} >
+                    <Grid container spacing={4} justifyContent="center">
+                        <Grid item xs={8} sm={5} >
+                        <TextField type="text" required fullWidth label="Delivery Adress"
+                            helperText="enter adress" onChange={handlerAdress}
+                            />
+                        </Grid>
+                        <Grid item xs={8} sm={4} md={5} >
+                    <TextField label="phone" fullWidth required
+                        type="number" onChange={handlerPhone}
+                        helperText={`enter contact phone (from 0) `}
+                        inputProps={{
+                            minlength: '10',
+                            maxlength: '11'
+                        }} />
+                </Grid>
+                    </Grid>
+                    <Box sx={{ marginTop: { xs: "10vh", sm: "5vh" }, textAlign: "center" }}>
+                        <Button type="submit" >Confirm Order</Button>
+                    </Box>
+                </form>
+             </Box>    
+        </Modal>
+        {/* <Modal
             open={openEdit}
             onClose={() => setFlEdit(false)}
             aria-labelledby="modal-modal-title"
@@ -292,7 +337,7 @@ const Cart: React.FC = () => {
                 <EmployeeForm submitFn={updateEmployee} employeeUpdated={employee.current} />
             </Box>
 
-        </Modal>
+        </Modal> */}
         <Modal
             open={openDetails}
             onClose={() => setFlDetails(false)}

@@ -8,6 +8,7 @@
                 {"to": "/employees/add", "label": "Add Product", "order":5}
     ],
      "noadmin": [{"to": "/cart", "label": "Shopping Cart","order":2}],
-     "noauthenticated": [{"to": "/signin", "label": "Sign In", "order": 2}],
+     "noauthenticated": [{"to": "/signin", "label": "Sign In", "order": 2},
+                         {"to": "/signUp", "label": "Sign Up", "order": 3}],
      "developmentAdmin": []
 }

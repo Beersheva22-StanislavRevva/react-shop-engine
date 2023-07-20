@@ -12,6 +12,7 @@ import {
     deleteDoc,
     doc,
     getDocs,
+    getCountFromServer,
 } from 'firebase/firestore';
 import { collectionData } from 'rxfire/firestore';
 import { getRandomInt } from '../../util/random';
@@ -20,6 +21,8 @@ import OrdersService from './OrdersService';
 import { useSelectorAuth } from '../../redux/store';
 import Order from '../../model/Order';
 import CartItem from '../../model/CartItem';
+import { getAuth } from 'firebase/auth';
+import UserData from '../../model/UserData';
 const MIN_ID = 100000;
 const MAX_ID = 1000000;
 
@@ -40,10 +43,16 @@ function getErrorMessage(firestoreError: FirestoreError): string {
     return errorMessage;
 }
 export default class OrdersServiceFire implements OrdersService {
-    collectionCartRef: CollectionReference = collection(getFirestore(appFirebase), 'users/VlfiDBrthJcjq1Q1ecEFU0izFIU2/cart');
-    collectionOrdersRef: CollectionReference = collection(getFirestore(appFirebase), 'orders');
-    
    
+//    userData:UserData = useSelectorAuth()||null;
+//    uid:string = this.userData?.uid as string;
+ 
+//    if (this.userData) {
+//     uid:string = userData.uid || '';
+//     }
+    collectionCartRef: CollectionReference = collection(getFirestore(appFirebase), `users/cart`);
+    collectionOrdersRef: CollectionReference = collection(getFirestore(appFirebase), 'orders');
+       
     async addProdToCart(empl: Employee | null, email: string, quantity: number): Promise<void> {
         const isExist = await this.cartExists(empl?.id);
         const docRef = this.getCartDocRef(empl?.id);
@@ -137,7 +146,7 @@ export default class OrdersServiceFire implements OrdersService {
         
         const cartItemsFixed = cartItems.map(e=>e);
         const date = String(new Date());
-        const id = 2;
+        const id = await this.getOrderId();
         const order = {id:id,
                        cartItems:cartItemsFixed,
                        dateTime: date,
@@ -179,5 +188,9 @@ export default class OrdersServiceFire implements OrdersService {
             throw errorMessage;
         }
         return order;
+    }
+    async getOrderId():Promise<number> {
+    const snapshot = await getCountFromServer(this.collectionOrdersRef);
+    return snapshot.data().count + 1;
     }
 }
