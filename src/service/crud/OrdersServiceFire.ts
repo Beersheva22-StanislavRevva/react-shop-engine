@@ -43,13 +43,17 @@ function getErrorMessage(firestoreError: FirestoreError): string {
     return errorMessage;
 }
 export default class OrdersServiceFire implements OrdersService {
-   
-//    userData:UserData = useSelectorAuth()||null;
-//    uid:string = this.userData?.uid as string;
- 
-//    if (this.userData) {
-//     uid:string = userData.uid || '';
-//     }
+
+userDataJson = localStorage.getItem('auth-item') || '';
+
+getUserData() {
+while (this.userDataJson === "") {
+    this.userDataJson = localStorage.getItem('auth-item') || ''; 
+}
+}
+
+
+    //userData = useSelectorAuth();
     cartId:string = getRandomInt(MIN_ID, MAX_ID).toString();
     collectionCartRef: CollectionReference = collection(getFirestore(appFirebase), `users/${this.cartId}/cart`);
     collectionOrdersRef: CollectionReference = collection(getFirestore(appFirebase), 'orders');

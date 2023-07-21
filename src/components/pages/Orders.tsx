@@ -1,11 +1,11 @@
-import { Box,  Button,  Modal, Typography, useMediaQuery, useTheme } from "@mui/material"
+import { Box,  Button,  FormControl,  Grid,  InputLabel,  MenuItem,  Modal, Select, TextField, Typography, useMediaQuery, useTheme } from "@mui/material"
 import { useState, useEffect, useRef, useMemo, ReactNode } from "react";
 import Employee from "../../model/Employee";
 import { employeesService, ordersService } from "../../config/service-config";
 import { Subscription } from 'rxjs';
 import { DataGrid, GridActionsCellItem, GridColDef } from "@mui/x-data-grid";
-
-import { DeleteOutline, InventoryOutlined, HighlightOffOutlined, Visibility} from "@mui/icons-material";
+import employeeConfig from "../../config/employee-config.json"
+import { DeleteOutline, InventoryOutlined, HighlightOffOutlined, Visibility, Edit} from "@mui/icons-material";
 import { useSelectorAuth } from "../../redux/store";
 import { Confirmation } from "../common/Confirmation";
 import { EmployeeForm } from "../forms/EmployeeForm";
@@ -110,8 +110,10 @@ const style = {
     p: 4,
 };
 
+const {status:status} = employeeConfig;
+
 const Orders: React.FC = () => {
-    const columnsAdmin: GridColDef[] = [
+    const columnsUser: GridColDef[] = [
         {
             field: 'actions', type: "actions", getActions: (params) => {
                 return [
@@ -129,6 +131,41 @@ const Orders: React.FC = () => {
                         const orderDetails = params.row as object;
                         setCanceledStatus(orderDetails);
 
+                    } }/>
+                    // <GridActionsCellItem label="update" icon={<Edit />}
+                    //     onClick={() => {
+                    //         employeeId.current = params.id as any;
+                    //         if (params.row) {
+                    //             const empl = params.row;
+                    //             empl && (employee.current = empl);
+                    //             setFlEdit(true)
+                    //         }
+    
+                    //     }
+                    //     } />
+                ]
+            }
+        }
+       ]
+       const columnsAdmin: GridColDef[] = [
+        {
+            field: 'actions', type: "actions", getActions: (params) => {
+                return [
+                    // <GridActionsCellItem label="remove" icon={<AddCircleOutline />}
+                    //     onClick={() => updateQuantity(params.row, 1)
+                    //     } />,
+                    <GridActionsCellItem label="details" icon={<InventoryOutlined />}
+                        
+                        onClick={() => {
+                            const cartdetails = params.row.cartItems as object[];
+                            setSelectedProduct(cartdetails);
+                        }}/>,
+                    <GridActionsCellItem label="remove" icon={<Edit />}
+                        onClick={() => {
+                        const orderDetails = params.row as object;
+                        setSelectedOrder(orderDetails);
+                        setEditOrder(true);
+                        
                     } }/>
                     // <GridActionsCellItem label="update" icon={<Edit />}
                     //     onClick={() => {
@@ -171,7 +208,11 @@ const Orders: React.FC = () => {
     const userData = useSelectorAuth();
     const cartProducts = useSelectorCart();
     const employees = useSelectorEmployees();
-    const orders = useSelectorOrders();
+    const ordersData = useSelectorOrders();
+    let orders = useSelectorOrders();
+    if (userData?.role === 'user') {
+        orders = orders.filter(e => e.email === userData?.email);
+    }
     const theme = useTheme();
     const isPortrait = useMediaQuery(theme.breakpoints.down('sm'));
     const columns = useMemo(() => getColumns(), [userData, cartProducts, isPortrait]);
@@ -185,6 +226,8 @@ const Orders: React.FC = () => {
     const confirmFn = useRef<any>(null);
     const employee = useRef<Employee | undefined>();
     const [selectedProduct, setSelectedProduct] = useState<any[]>([]);
+    const [selectedOrder, setSelectedOrder] = useState<any>({});
+    const [editOrder, setEditOrder] = useState(false);
     
     function getColumns(): GridColDef[] {
         
@@ -192,7 +235,7 @@ const Orders: React.FC = () => {
     }
     function getColumnsFromLandscape(): GridColDef[]{
         let res: GridColDef[] = columnsCommon;
-         res = res.concat(columnsAdmin);
+        res = res.concat(userData?.role === 'admin'? columnsAdmin : columnsUser);
     return res;
     }
     function removeEmployee(id: any) {
@@ -311,6 +354,34 @@ const Orders: React.FC = () => {
        
 
     }
+    let adress:string;
+    let phone:string;
+    let currentStatus:string;
+    let handlerAdress = (event:any) => {
+        adress = event.target.value
+    }
+    let handlerPhone = (event:any) => {
+        phone = String(event.target.value);
+    }
+    let handlerStatus = (event:any) => {
+        currentStatus = event.target.value;
+    }
+
+    async function orderEditClick(event: any): Promise<void> {
+        event.preventDefault();
+        let errorMessage: string = '';
+        const selectedOrderCopy = { ...selectedOrder };
+        adress && (selectedOrderCopy.adress = adress);
+        phone && (selectedOrderCopy.phone = phone);
+        status && (selectedOrderCopy.status = currentStatus);
+        try {
+            await ordersService.updateOrder(selectedOrderCopy);
+            setEditOrder(false);
+        } catch (error: any) {
+            errorMessage = error;
+        }
+        dispatch(errorMessage, '');
+    }
 
     return <Box sx={{
         display: 'flex', flexDirection: "column", justifyContent: 'center',
@@ -335,14 +406,14 @@ const Orders: React.FC = () => {
         <Confirmation confirmFn={confirmFn.current} open={openConfirm}
             title={title.current} content={content.current}></Confirmation>
         <Modal open={selectedProduct.length > 0}
-        onClose={() => setSelectedProduct([])}
-        aria-labelledby="modal-modal-title"
-        aria-describedby="modal-modal-description"
+            onClose={() => setSelectedProduct([])}
+            aria-labelledby="modal-modal-title"
+            aria-describedby="modal-modal-description"
         >
-             <Box sx={{ height: '50vh', width: '70vw', backgroundColor:'white' }}>
+            <Box sx={{ height: '50vh', width: '70vw', backgroundColor: 'white' }}>
                 <DataGrid columns={columnsDetails} rows={selectedProduct} />
-        </Box>
-            </Modal>                
+            </Box>
+        </Modal>
         <Modal
             open={openEdit}
             onClose={() => setFlEdit(false)}
@@ -362,6 +433,48 @@ const Orders: React.FC = () => {
         >
             <Box sx={style}>
                 <EmployeeCard actionFn={cardAction} employee={employee.current!} />
+            </Box>
+        </Modal>
+        <Modal
+            open={editOrder}
+            onClose={() => setEditOrder(false)}
+            aria-labelledby="modal-modal-title"
+            aria-describedby="modal-modal-description"
+            >
+            <Box sx={{ backgroundColor: 'white', position: 'absolute' as 'absolute',top: '25%', left: '25%', }}>
+            <Typography variant="h5" color="text.secondary" textAlign="center" margin="2vw">
+                                    Edit Order
+                                </Typography>
+                <form onSubmit={orderEditClick} >
+                    <Grid container spacing={4} justifyContent="center">
+                        <Grid item xs={8} sm={5} >
+                            <TextField type="text" defaultValue={selectedOrder.adress} fullWidth label="Delivery Adress"
+                                helperText="enter adress" onChange={handlerAdress}
+                            />
+                        </Grid>
+                        <Grid item xs={8} sm={4} md={5} >
+                            <TextField label="phone" fullWidth
+                                type="number" defaultValue={selectedOrder.phone} onChange={handlerPhone}
+                                helperText={`enter contact phone (from 0) `}
+                                inputProps={{
+                                    minlength: '10',
+                                    maxlength: '11'
+                                }} />
+                        </Grid>
+                        <Grid item xs={8} sm={5} >
+                            <FormControl fullWidth required>
+                                <InputLabel id="select-unit-id">Unit</InputLabel>
+                                <Select labelId="select-unit-id" label="Status"
+                                    defaultValue={selectedOrder.status} onChange={handlerStatus}>
+                                     {status.map(status => <MenuItem value={status} key={status}>{status}</MenuItem>)}
+                                </Select>
+                            </FormControl>
+                        </Grid>
+                    </Grid>
+                    <Box sx={{ marginTop: { xs: "10vh", sm: "5vh" }, textAlign: "center" }}>
+                        <Button type="submit" >Confirm Edit</Button>
+                    </Box>
+                </form>
             </Box>
         </Modal>
     </Box>

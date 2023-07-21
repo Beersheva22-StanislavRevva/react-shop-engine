@@ -89,7 +89,7 @@ export default class AuthServiceFire implements AuthService {
         } catch (error: any) {
             console.log(error.code, error)
         }
-
+        
         return userData;
     }
     logout(): Promise<void> {
