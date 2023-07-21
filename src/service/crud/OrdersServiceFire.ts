@@ -50,7 +50,8 @@ export default class OrdersServiceFire implements OrdersService {
 //    if (this.userData) {
 //     uid:string = userData.uid || '';
 //     }
-    collectionCartRef: CollectionReference = collection(getFirestore(appFirebase), `users/cart`);
+    cartId:string = getRandomInt(MIN_ID, MAX_ID).toString();
+    collectionCartRef: CollectionReference = collection(getFirestore(appFirebase), `users/${this.cartId}/cart`);
     collectionOrdersRef: CollectionReference = collection(getFirestore(appFirebase), 'orders');
        
     async addProdToCart(empl: Employee | null, email: string, quantity: number): Promise<void> {
@@ -138,6 +139,7 @@ export default class OrdersServiceFire implements OrdersService {
         } while (await this.cartExists(id));
         return id;
     }
+
     clearCart(cartItems:CartItem[]):void {
         cartItems.forEach(e => this.deleteCartProduct(e.id));
     }
