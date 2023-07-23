@@ -1,5 +1,5 @@
 import { Observable, catchError, of } from 'rxjs';
-import Employee from '../../model/Employee';
+import Product from '../../model/Product';
 import appFirebase from '../../config/firebase-config';
 import {
     CollectionReference,
@@ -26,7 +26,7 @@ import UserData from '../../model/UserData';
 const MIN_ID = 100000;
 const MAX_ID = 1000000;
 
-function convertEmployee(empl: Employee, id?: string): any {
+function convertEmployee(empl: Product, id?: string): any {
     const res: any = { ...empl, id: id ? id : empl.id/*, birthDate: getISODateStr(empl.birthDate)*/ };
     return res;
 }
@@ -58,7 +58,7 @@ while (this.userDataJson === "") {
     collectionCartRef: CollectionReference = collection(getFirestore(appFirebase), `users/${this.cartId}/cart`);
     collectionOrdersRef: CollectionReference = collection(getFirestore(appFirebase), 'orders');
        
-    async addProdToCart(empl: Employee | null, email: string, quantity: number): Promise<void> {
+    async addProdToCart(empl: Product | null, email: string, quantity: number): Promise<void> {
         const isExist = await this.cartExists(empl?.id);
         const docRef = this.getCartDocRef(empl?.id);
         let employee;
@@ -99,7 +99,7 @@ while (this.userDataJson === "") {
             throw errorMessage;
         }
     }
-    async updateCartProduct(empl: Employee): Promise<Employee> {
+    async updateCartProduct(empl: Product): Promise<Product> {
         if (!empl.id || !(await this.cartExists(empl.id))) {
             throw 'not found';
         }
@@ -151,7 +151,7 @@ while (this.userDataJson === "") {
    async addOrder(cartItems:CartItem[], adress:string, phone:string, totalSum:number, email?:string,):Promise<void> {
         
         const cartItemsFixed = cartItems.map(e=>e);
-        const date = String(new Date());
+        const date = getISODateStr(new Date());
         const id = await this.getOrderId();
         const order = {id:id,
                        cartItems:cartItemsFixed,
@@ -162,7 +162,7 @@ while (this.userDataJson === "") {
                        phone: phone,
                        status: 'created'                       
                       }
-        
+                      
         const docRef = this.getOrderDocRef(String(id));
         try {
             await setDoc(docRef, order);

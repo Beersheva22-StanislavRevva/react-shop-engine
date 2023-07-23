@@ -9,8 +9,8 @@ import routesConfig from './config/routes-config.json';
 import NotFound from "./components/pages/NotFound";
 import { RouteType } from "./components/navigator/Navigator";
 import UserData from "./model/UserData";
-import Employees from "./components/pages/Employees";
-import AddEmployee from "./components/pages/AddEmployee";
+import ProductEditor from "./components/pages/ProductEditor";
+import AddProduct from "./components/pages/AddProduct";
 import AgeStatistics from "./components/pages/AgeStatistics";
 import SalaryStatistics from "./components/pages/SalaryStatistics";
 import { StatusType } from "./model/StatusType";
@@ -81,8 +81,8 @@ const App: React.FC = () => {
   <Routes>
     <Route path="/" element={<NavigatorDispatcher routes={routes}/>}>
         <Route index element={<Products/>}/>
-        <Route path="employees/edit" element={<Employees/>}/>
-        <Route path="employees/add" element={<AddEmployee/>}/>
+        <Route path="employees/edit" element={<ProductEditor/>}/>
+        <Route path="employees/add" element={<AddProduct/>}/>
         <Route path="/cart" element={<Cart/>}/>
         <Route path="/orders" element={<Orders/>}/>
         <Route path="statistics/age" element={<AgeStatistics/>}/>

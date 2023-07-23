@@ -1,17 +1,16 @@
-import { Box,  Button,  Grid,  Modal, TextField, Typography, useMediaQuery, useTheme } from "@mui/material"
+import { Box,  Button,  Grid,  IconButton,  Modal, TextField, Typography, useMediaQuery, useTheme } from "@mui/material"
 import { useState, useEffect, useRef, useMemo, ReactNode } from "react";
-import Employee from "../../model/Employee";
-import { employeesService, ordersService } from "../../config/service-config";
+import Product from "../../model/Product";
+import { productService, ordersService } from "../../config/service-config";
 import { Subscription } from 'rxjs';
 import { DataGrid, GridActionsCellItem, GridColDef } from "@mui/x-data-grid";
-
-import { DeleteOutline, AddCircleOutline, RemoveCircleOutline, Details, Edit, Man, Visibility, Woman } from "@mui/icons-material";
+import { DeleteOutline, AddCircleOutline, RemoveCircleOutline, Details, Edit, Man, Visibility, Woman, RemoveShoppingCartOutlined } from "@mui/icons-material";
 import { useSelectorAuth } from "../../redux/store";
 import { Confirmation } from "../common/Confirmation";
-import { EmployeeForm } from "../forms/EmployeeForm";
+import { ProductForm } from "../forms/ProductForm";
 import InputResult from "../../model/InputResult";
 import { useDispatchCode, useSelectorCart, useSelectorEmployees } from "../../hooks/hooks";
-import EmployeeCard from "../cards/EmployeeCard";
+import CartItemCard from "../cards/CartItemCard";
 import UserData from "../../model/UserData";
 import CartItem from "../../model/CartItem";
 const columnsCommon: GridColDef[] = [
@@ -24,15 +23,15 @@ const columnsCommon: GridColDef[] = [
         align: 'center', headerAlign: 'center'
     },
     {
-        field: 'category', headerName: 'Category', flex: 0.4, headerClassName: 'data-grid-header',
-        align: 'center', headerAlign: 'center'
-    },
-    {
         field: 'name', headerName: 'Name', flex: 0.6, headerClassName: 'data-grid-header',
         align: 'center', headerAlign: 'center'
     },
     {
         field: 'description', headerName: 'Description', flex: 0.7, headerClassName: 'data-grid-header',
+        align: 'center', headerAlign: 'center'
+    },
+    {
+        field: 'category', headerName: 'Category', flex: 0.4, headerClassName: 'data-grid-header',
         align: 'center', headerAlign: 'center'
     },
     {
@@ -58,19 +57,9 @@ const columnsCommon: GridColDef[] = [
         headerClassName: 'data-grid-header',
         align: 'center',
         headerAlign: 'center',
-        renderCell: (params) => <img src={params.value} alt="product" width="50" height="50" />,
+        renderCell: (params) => <img src={params.value} alt="product" width="50" height="50"  />,
     },
-    // {
-    //     field: 'birthDate', headerName: "Date", flex: 0.8, type: 'date', headerClassName: 'data-grid-header',
-    //     align: 'center', headerAlign: 'center'
-    // },
-        
-    // {
-    //     field: 'gender', headerName: 'Gender', flex: 0.6, headerClassName: 'data-grid-header',
-    //     align: 'center', headerAlign: 'center', renderCell: params => {
-    //         return params.value == "male" ? <Man/> : <Woman/>
-    //     }
-    // },
+    
    ];
    
    
@@ -94,11 +83,21 @@ const Cart: React.FC = () => {
                     <GridActionsCellItem label="remove" icon={<AddCircleOutline />}
                         onClick={() => updateQuantity(params.row, 1)
                         } />,
-                    <GridActionsCellItem label="remove" icon={<RemoveCircleOutline />}
-                        onClick={() => updateQuantity(params.row, -1)
-                        } />,
+                    <GridActionsCellItem label="remove"  //<RemoveCircleOutline />
+                        onClick={() =>{
+                        const quantity = params.row.quantity as number;
+                        if (quantity > 1 ) {
+                          updateQuantity(params.row, -1);
+                        } else {
+                          removeCartItem(params.id);
+                        }
+                      
+                        }}
+                        icon={getIconRemoveItem()} 
+                          />,
+                        //getCardDecButton(),
                     <GridActionsCellItem label="remove" icon={<DeleteOutline />}
-                        onClick={() => removeEmployee(params.id)
+                        onClick={() => removeCartItem(params.id)
                         } />,
                     // <GridActionsCellItem label="update" icon={<Edit />}
                     //     onClick={() => {
@@ -116,18 +115,18 @@ const Cart: React.FC = () => {
         }
        ]
        const columnsPortrait: GridColDef[] = [
-        columnsCommon[0],
         columnsCommon[1],
+        columnsCommon[6],
         {
             field: 'actions', type: "actions", getActions: (params) => {
                 return [
                    
                     <GridActionsCellItem label="details" icon={<Visibility />}
                         onClick={() => {
-                            employeeId.current = params.id as any;
+                            productId.current = params.id as any;
                             if (params.row) {
-                                const empl = params.row;
-                                empl && (employee.current = empl);
+                                const item = params.row;
+                                item && (cartItem.current = item);
                                 setFlDetails(true)
                             }
     
@@ -139,11 +138,11 @@ const Cart: React.FC = () => {
        ]
     const dispatch = useDispatchCode();
     const userData = useSelectorAuth();
-    const cartProducts = useSelectorCart();
+    const cartItems = useSelectorCart();
     const employees = useSelectorEmployees();
     const theme = useTheme();
     const isPortrait = useMediaQuery(theme.breakpoints.down('sm'));
-    const columns = useMemo(() => getColumns(), [userData, cartProducts, isPortrait]);
+    const columns = useMemo(() => getColumns(), [userData, cartItems, isPortrait]);
 
     const [openConfirm, setOpenConfirm] = useState(false);
     const [openEdit, setFlEdit] = useState(false);
@@ -151,11 +150,13 @@ const Cart: React.FC = () => {
     const [openOrderDetails, setOpenOrderDetails] = useState(false);
     const title = useRef('');
     const content = useRef('');
-    const employeeId = useRef('');
+    const productId = useRef('');
     const confirmFn = useRef<any>(null);
-    const employee = useRef<Employee | undefined>();
+    const cartItem = useRef<Product | undefined>();
+    const [buttonFl, setButtonFl] = useState<boolean>(true);
     
     
+
     function getColumns(): GridColDef[] {
         
         return isPortrait ? columnsPortrait : getColumnsFromLandscape();
@@ -165,11 +166,11 @@ const Cart: React.FC = () => {
          res = res.concat(columnsAdmin);
     return res;
     }
-    function removeEmployee(id: any) {
-        title.current = "Remove Employee object?";
-        const employee = cartProducts.find(empl => empl.id == id);
-        content.current = `You are going remove employee with id ${employee?.id}`;
-        employeeId.current = id;
+    function removeCartItem(id: any) {
+        title.current = "Remove item from cart?";
+        const cartItem = cartItems.find(prod => prod.id == id);
+        content.current = `You are going to remove item with ${cartItem?.name} from cart`;
+        productId.current = id;
         confirmFn.current = actualRemove;
         setOpenConfirm(true);
     }
@@ -177,7 +178,7 @@ const Cart: React.FC = () => {
         let errorMessage: string = '';
         if (isOk) {
             try {
-                await ordersService.deleteCartProduct(employeeId.current);
+                await ordersService.deleteCartProduct(productId.current);
             } catch (error: any) {
                 errorMessage = error;
             }
@@ -185,13 +186,13 @@ const Cart: React.FC = () => {
         dispatch(errorMessage, '');
         setOpenConfirm(false);
     }
-    function updateEmployee(empl: Employee): Promise<InputResult> {
+    function updateEmployee(empl: Product): Promise<InputResult> {
         setFlEdit(false)
         const res: InputResult = { status: 'error', message: '' };
-        if (JSON.stringify(employee.current) != JSON.stringify(empl)) {
-            title.current = "Update Employee object?";
-            employee.current = empl;
-            content.current = `You are going update employee with id ${empl.id}`;
+        if (JSON.stringify(cartItem.current) != JSON.stringify(empl)) {
+            title.current = "Update Cart object?";
+            cartItem.current = empl;
+            content.current = `You are going update product with id ${empl.id}`;
             confirmFn.current = actualUpdate;
             setOpenConfirm(true);
         }
@@ -204,7 +205,7 @@ const Cart: React.FC = () => {
 
         if (isOk) {
             try {
-                await ordersService.updateCartProduct(employee.current!);
+                await ordersService.updateCartProduct(cartItem.current!);
             } catch (error: any) {
                 errorMessage = error
             }
@@ -215,11 +216,16 @@ const Cart: React.FC = () => {
     }
     function cardAction(isDelete: boolean){
         if (isDelete) {
-            removeEmployee(employeeId.current);
+            updateQuantity(cartItem.current, 1);
         } else {
-            setFlEdit(true)
+            const quantity = cartItem.current?.quantity as number;
+            if (quantity && quantity > 1 ) {
+                updateQuantity(cartItem.current, -1);
+              } else {
+                removeCartItem(cartItem.current!);
+              }
         }
-        setFlDetails(false)
+        setFlDetails(true)
     }
     async function updateQuantity (empl:any, newQuant:number): Promise<void> {
         const quantity= empl.quantity || 0;
@@ -240,7 +246,7 @@ const Cart: React.FC = () => {
     }
     
     // function getDataGridContent (employees:Employee[], cartProducts:Employee[]):CartItem[] {
-        const cartContent: CartItem[] = cartProducts.map(e => {
+        const cartContent: CartItem[] = cartItems.map(e => {
             const employee = employees.find(el => el.id == e.id);
             return {...e, 
                 category: employee?.category,
@@ -251,7 +257,7 @@ const Cart: React.FC = () => {
                 price: employee?.price,                
                 sum: ((employees.find(el => el.id == e.id)?.price)||0) * (e.quantity||0)}
         });
-        let totalSum = cartProducts.length === 0 ? 0: cartContent.map(e => e.sum || 0).reduce((acc,cur) => acc + cur);
+        let totalSum = cartItems.length === 0 ? 0: cartContent.map(e => e.sum || 0).reduce((acc,cur) => acc + cur);
         // return res;
     // }
 
@@ -274,6 +280,9 @@ const Cart: React.FC = () => {
        ordersService.addOrder(cartContent, adress, phone, totalSum, userData?.email);
        setOpenOrderDetails(false);
        ordersService.clearCart(cartContent); 
+    }
+    function getIconRemoveItem() {
+        return buttonFl ? <RemoveCircleOutline /> : <></> ; 
     }
 
     return <Box sx={{
@@ -345,7 +354,7 @@ const Cart: React.FC = () => {
             aria-describedby="modal-modal-description"
         >
             <Box sx={style}>
-                <EmployeeCard actionFn={cardAction} employee={employee.current!} />
+                <CartItemCard actionFn={cardAction} cartItem={cartItem.current!} />
             </Box>
         </Modal>
     </Box>

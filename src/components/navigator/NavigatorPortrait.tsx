@@ -31,21 +31,26 @@ const NavigatorPortrait: React.FC<{routes: RouteType[]}> = ({ routes }) => {
         return routes.map(i => <ListItem onClick={toggleOpen} 
             component={Link} to={i.to} key={i.to}>{i.label}</ListItem>)
     }
-    return <Box sx={{ marginTop: { xs: "15vh", sm: "20vh" } }}>
+    return <Box sx={{ marginTop: { xs: "15vh", sm: "20vh" }}}>
         <AppBar position="fixed">
-            <Toolbar><IconButton onClick={toggleOpen} sx={{ color: 'white' }}>
+            <Toolbar style={{backgroundColor:"#7d0000"}} ><IconButton onClick={toggleOpen} sx={{ color: 'white', backgroundColor: '#7d0000' }}>
                 <Menu />
             </IconButton>
-                <Typography sx={{ width: "100%", textAlign: "center", fontSize: "1.5em" }}>
+                <Typography sx={{ width: "100%", textAlign: "center", fontSize: "1.5em", backgroundColor: '#7d0000'  }}>
                     {getTitle()}
                 </Typography>
-                <Drawer open={flOpen} onClose={toggleOpen} anchor="left">
+                <Drawer open={flOpen} onClose={toggleOpen} anchor="left" >
                     <List>
                         {getListItems()}
                     </List>
                 </Drawer></Toolbar>
-
         </AppBar>
+        <Box display="flex" flexDirection="row" justifyContent="center" alignContent="center" marginBottom='2vh'>
+        <Box  sx={{width: {xs:"40vw", sm:"10vw"}}}   >
+            <img src="/images/shoplogo.png" alt="" width="75%" />
+        </Box>
+        <Typography sx={{fontSize: {xs:"200%", sm:"200%"}}}  color='gray' alignContent='center'>DIONIS CLUB</Typography>
+        </Box>
         <Outlet></Outlet>
     </Box>
 }

@@ -1,17 +1,17 @@
 import { Box,  Button,  FormControl,  Grid,  InputLabel,  MenuItem,  Modal, Select, TextField, Typography, useMediaQuery, useTheme } from "@mui/material"
 import { useState, useEffect, useRef, useMemo, ReactNode } from "react";
-import Employee from "../../model/Employee";
-import { employeesService, ordersService } from "../../config/service-config";
+import Product from "../../model/Product";
+import { productService, ordersService } from "../../config/service-config";
 import { Subscription } from 'rxjs';
 import { DataGrid, GridActionsCellItem, GridColDef } from "@mui/x-data-grid";
-import employeeConfig from "../../config/employee-config.json"
+import productConfig from "../../config/product-config.json"
 import { DeleteOutline, InventoryOutlined, HighlightOffOutlined, Visibility, Edit} from "@mui/icons-material";
 import { useSelectorAuth } from "../../redux/store";
 import { Confirmation } from "../common/Confirmation";
-import { EmployeeForm } from "../forms/EmployeeForm";
+import { ProductForm } from "../forms/ProductForm";
 import InputResult from "../../model/InputResult";
 import { useDispatchCode, useSelectorCart, useSelectorEmployees, useSelectorOrders } from "../../hooks/hooks";
-import EmployeeCard from "../cards/EmployeeCard";
+import CartItemCard from "../cards/CartItemCard";
 import UserData from "../../model/UserData";
 import CartItem from "../../model/CartItem";
 import Order from "../../model/Order";
@@ -110,7 +110,7 @@ const style = {
     p: 4,
 };
 
-const {status:status} = employeeConfig;
+const {status:status} = productConfig;
 
 const Orders: React.FC = () => {
     const columnsUser: GridColDef[] = [
@@ -224,7 +224,7 @@ const Orders: React.FC = () => {
     const content = useRef('');
     const employeeId = useRef('');
     const confirmFn = useRef<any>(null);
-    const employee = useRef<Employee | undefined>();
+    const employee = useRef<Product | undefined>();
     const [selectedProduct, setSelectedProduct] = useState<any[]>([]);
     const [selectedOrder, setSelectedOrder] = useState<any>({});
     const [editOrder, setEditOrder] = useState(false);
@@ -258,7 +258,7 @@ const Orders: React.FC = () => {
         dispatch(errorMessage, '');
         setOpenConfirm(false);
     }
-    function updateEmployee(empl: Employee): Promise<InputResult> {
+    function updateEmployee(empl: Product): Promise<InputResult> {
         setFlEdit(false)
         const res: InputResult = { status: 'error', message: '' };
         if (JSON.stringify(employee.current) != JSON.stringify(empl)) {
@@ -388,7 +388,7 @@ const Orders: React.FC = () => {
         alignContent: 'center'
     }}>
         <Box sx={{ height: '79vh', width: '95vw' }}>
-            <DataGrid columns={columns} rows={orders} />
+            <DataGrid columns={columns} rows={orders} style={{fontSize:"70%"}} />
         </Box>
         <Box sx={{
             height: '10vh', width: '95vw', marginTop: '1vh',
@@ -405,13 +405,13 @@ const Orders: React.FC = () => {
         </Box>
         <Confirmation confirmFn={confirmFn.current} open={openConfirm}
             title={title.current} content={content.current}></Confirmation>
-        <Modal open={selectedProduct.length > 0}
+        <Modal open={selectedProduct.length > 0  }
             onClose={() => setSelectedProduct([])}
             aria-labelledby="modal-modal-title"
             aria-describedby="modal-modal-description"
         >
-            <Box sx={{ height: '50vh', width: '70vw', backgroundColor: 'white' }}>
-                <DataGrid columns={columnsDetails} rows={selectedProduct} />
+            <Box sx={{ height: '50vh', width: '90vw', backgroundColor: 'white' }}>
+                <DataGrid columns={columnsDetails} rows={selectedProduct} style={{fontSize:"70%"}}/>
             </Box>
         </Modal>
         <Modal
@@ -421,20 +421,20 @@ const Orders: React.FC = () => {
             aria-describedby="modal-modal-description"
         >
             <Box sx={style}>
-                <EmployeeForm submitFn={updateEmployee} employeeUpdated={employee.current} />
+                <ProductForm submitFn={updateEmployee} productUpdated={employee.current} />
             </Box>
 
         </Modal>
-        <Modal
+        {/* <Modal
             open={openDetails}
             onClose={() => setFlDetails(false)}
             aria-labelledby="modal-modal-title"
             aria-describedby="modal-modal-description"
         >
             <Box sx={style}>
-                <EmployeeCard actionFn={cardAction} employee={employee.current!} />
+                <EmployeeCard actionFn={cardAction} product={employee.current!} />
             </Box>
-        </Modal>
+        </Modal> */}
         <Modal
             open={editOrder}
             onClose={() => setEditOrder(false)}

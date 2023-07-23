@@ -3,10 +3,10 @@ import CodePayload from "../model/CodePayload";
 import CodeType from "../model/CodeType";
 import { codeActions } from "../redux/slices/codeSlice";
 import { useEffect, useState } from "react";
-import Employee from "../model/Employee";
+import Product from "../model/Product";
 import Order from "../model/Order";
 import { Subscription } from "rxjs";
-import { employeesService, ordersService } from "../config/service-config";
+import { productService, ordersService } from "../config/service-config";
 import CartItem from "../model/CartItem";
 
 export function useDispatchCode() {
@@ -29,12 +29,12 @@ export function useDispatchCode() {
 }
 export function useSelectorEmployees() {
     const dispatch = useDispatchCode();
-    const [employees, setEmployees] = useState<Employee[]>([]);
+    const [employees, setEmployees] = useState<Product[]>([]);
     useEffect(() => {
 
-        const subscription: Subscription = employeesService.getEmployees()
+        const subscription: Subscription = productService.getProducts()
             .subscribe({
-                next(emplArray: Employee[] | string) {
+                next(emplArray: Product[] | string) {
                     let errorMessage: string = '';
                     if (typeof emplArray === 'string') {
                         errorMessage = emplArray;
@@ -93,8 +93,8 @@ export function useSelectorOrders() {
     }, []);
     return orders;
 }
-export function useSort(employeesFilter:Employee[]) {
-    const [res, setRes] = useState<Employee[]>([]);
+export function useSort(employeesFilter:Product[]) {
+    const [res, setRes] = useState<Product[]>([]);
         useEffect(() => {
             
             setRes(employeesFilter.sort((a, b) => {
