@@ -93,3 +93,19 @@ export function useSelectorOrders() {
     }, []);
     return orders;
 }
+export function useSort(employeesFilter:Employee[]) {
+    const [res, setRes] = useState<Employee[]>([]);
+        useEffect(() => {
+            
+            setRes(employeesFilter.sort((a, b) => {
+                if (a.price > b.price) {
+                    return 1;
+                }
+                if (a.price < b.price) {
+                    return -1;
+                }
+                return 0;
+            }))
+        }, []);
+        return res;
+}

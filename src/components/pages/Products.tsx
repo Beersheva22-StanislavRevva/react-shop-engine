@@ -1,19 +1,21 @@
-import { Box,  Button,  Card, CardActions,  CardContent,  CardMedia,  Dialog,  DialogContent,  DialogTitle,  Grid,  IconButton,  Modal, Typography, useMediaQuery, useTheme } from "@mui/material"
+import { Box,  Button,  Card, CardActions,  CardContent,  CardMedia,  Dialog,  DialogContent,  DialogTitle,  FormControl,  Grid,  IconButton,  InputLabel,  MenuItem,  Modal, Select, TextField, Typography, useMediaQuery, useTheme } from "@mui/material"
 import { useState, useEffect, useRef, useMemo, ReactNode } from "react";
 import Employee from "../../model/Employee";
 import { employeesService,ordersService } from "../../config/service-config";
 import { Subscription } from 'rxjs';
 import { DataGrid, GridActionsCellItem, GridColDef } from "@mui/x-data-grid";
-import { Delete, Details, Edit, Man, Visibility, Woman, AddShoppingCartOutlined, RemoveShoppingCartOutlined } from "@mui/icons-material";
+import { Delete, Details, Edit, Man, Visibility, Woman, AddShoppingCartOutlined, RemoveShoppingCartOutlined, ArrowUpwardOutlined, ArrowDownwardOutlined} from "@mui/icons-material";
 import { useSelectorAuth } from "../../redux/store";
 import { Confirmation } from "../common/Confirmation";
 import { EmployeeForm } from "../forms/EmployeeForm";
 import InputResult from "../../model/InputResult";
-import { useDispatchCode, useSelectorCart, useSelectorEmployees } from "../../hooks/hooks";
+import { useDispatchCode, useSelectorCart, useSelectorEmployees, useSort } from "../../hooks/hooks";
 import EmployeeCard from "../cards/EmployeeCard";
 import UserData from "../../model/UserData";
 import { log } from "console";
 import OrdersServiceFire from "../../service/crud/OrdersServiceFire";
+import employeeConfig from "../../config/employee-config.json"
+
 const columnsCommon: GridColDef[] = [
     {
         field: 'id', headerName: 'ID', flex: 0.3, headerClassName: 'data-grid-header',
@@ -70,6 +72,8 @@ const style = {
     boxShadow: 24,
     p: 4,
 };
+
+const categories:string[] = employeeConfig.category;
 
 const Products: React.FC = () => {
     const columnsAdmin: GridColDef[] = [
@@ -238,9 +242,67 @@ const Products: React.FC = () => {
         return res;
     }
     
+    
+    const[currentCategory, setCurrentCategory] = useState('all');
+    const[minPrice, setMinPrice] = useState<number>();
+    const[maxPrice, setMaxPrice] = useState<number>();
+    let handlerCategory = (event:any) => {
+      let currentCategoryhandler = event.target.value;
+       setCurrentCategory(currentCategoryhandler);
+    }
+    let employeesFilter = currentCategory == 'all' ? employees
+    : employees.filter(e => e.category == currentCategory);
+       
+    let handlerMinPrice = (event:any) => {
+        let currentMinPrice = event.target.value;
+        setMinPrice(currentMinPrice);
+    }
+    if(minPrice && minPrice > 0) {
+        employeesFilter = employeesFilter.filter(e => e.price >= minPrice)
+    } 
+    
+    let handlerMaxPrice = (event:any) => {
+        let currentMaxPrice = event.target.value;
+        setMaxPrice(currentMaxPrice);
+    }
+    if(maxPrice && maxPrice > 0) {
+        employeesFilter = employeesFilter.filter(e => e.price <= maxPrice)
+    }
+
+    const [sortIncFl, setIncSortFl] = useState<boolean>(false);
+
+   if (sortIncFl) {
+    employeesFilter = employeesFilter.sort((a, b) => {
+                    if (a.price > b.price) {
+                        return 1;
+                    }
+                    if (a.price < b.price) {
+                        return -1;
+                    }
+                    return 0;
+                });
+                setIncSortFl(false);
+    }
+
+    const [sortDecFl, setDecSortFl] = useState<boolean>(false);
+
+    if (sortDecFl) {
+        employeesFilter = employeesFilter.sort((a, b) => {
+                        if (a.price > b.price) {
+                            return -1;
+                        }
+                        if (a.price < b.price) {
+                            return 1;
+                        }
+                        return 0;
+                    });
+                    setDecSortFl(false);
+        }
+
+    
     return <Box sx={{
-        display: 'flex', justifyContent: 'center',
-        alignContent: 'center'
+        display: 'flex', flexDirection: 'column', justifyContent: 'center',
+        alignContent: 'center', margin: '0.5vw'
     }}>
         {/* <Box sx={{ height: '80vh', width: '95vw' }}>
             <DataGrid columns={columns} rows={employees} />
@@ -268,8 +330,57 @@ const Products: React.FC = () => {
             </Box>
         </Modal> */}
 
-        <Grid container spacing={3}>
-            {employees.map(e =>
+        <Box width = '95vw' margin=''>
+            {/* <Typography variant="body1" color="text.secondary" textAlign="center" margin="1vw">
+                Filter</Typography> */}
+        <Grid container spacing={2} justifyContent="left" display="flex" flexDirection="row">
+            <Grid item xs={2} sm={2} >
+                <FormControl required fullWidth  >
+                    <InputLabel id="select-unit-id">Category</InputLabel>
+                    <Select labelId="select-unit-id" label="Status"
+                       onChange={handlerCategory} defaultValue='all' >
+                        <MenuItem value='all' key="all">all</MenuItem>
+                        {categories.map(e => <MenuItem value={e} key={e}>{e}</MenuItem>)}
+                    </Select>
+                </FormControl>
+            </Grid>
+            <Grid item xs={3} sm={3} md={2} >
+                <TextField label="min price" 
+                    type="number" onChange={handlerMinPrice}
+                    helperText={`enter min price `}
+                    inputProps={{
+                        min: 0
+                        
+                    }} />
+            </Grid>
+            <Grid item xs={3} sm={3} md={2} >
+                <TextField label="max price" 
+                    type="number" onChange={handlerMaxPrice}
+                    helperText={`enter max price `}
+                    inputProps={{
+                       min: 1,                    
+                    }} />
+            </Grid>
+            <Grid item xs={3} sm={3} md={3} >
+                <Button variant="outlined" startIcon={<ArrowUpwardOutlined />} onClick={()=> setIncSortFl(true)}> Price Filter</Button>
+            </Grid>
+            <Grid item xs={3} sm={3} md={3} >
+                <Button variant="outlined" startIcon={<ArrowDownwardOutlined />} onClick={()=> setDecSortFl(true)}> Price Filter</Button>
+            </Grid>
+        </Grid>
+            {/* <Grid item xs={8} sm={4} md={5} >
+                <TextField label="min price" fullWidth
+                    type="number" onChange={handlerMaxPrice}
+                    helperText={`enter contact phone (from 0) `}
+                    inputProps={{
+                        minlength: '10',
+                        maxlength: '11'
+                    }} />
+            </Grid> */}
+
+        </Box>
+        <Grid container spacing={3} marginTop='2vh'>
+            {employeesFilter.map(e =>
                 <Grid item xs={6} sm={3} lg={2} key={e.id}>
                     <Card sx={{ maxWidth: '100', maxHeight: '200', display: 'flex', flexDirection: 'column', alignItems: 'center', }}
                     >
