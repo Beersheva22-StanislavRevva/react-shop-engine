@@ -361,11 +361,9 @@ const Products: React.FC = () => {
                        min: 1,                    
                     }} />
             </Grid>
-            <Grid item xs={3} sm={3} md={3} >
-                <Button variant="outlined" startIcon={<ArrowUpwardOutlined />} onClick={()=> setIncSortFl(true)}> Price Filter</Button>
-            </Grid>
-            <Grid item xs={3} sm={3} md={3} >
-                <Button variant="outlined" startIcon={<ArrowDownwardOutlined />} onClick={()=> setDecSortFl(true)}> Price Filter</Button>
+            <Grid item xs={4} sm={4} md={4} display="flex" flexDirection="row" gap='2vw' >
+                <Button variant="outlined" startIcon={<ArrowUpwardOutlined />} style={{height:'8.5vh'}}  onClick={()=> setIncSortFl(true)}> Price Filter</Button> 
+                <Button variant="outlined" startIcon={<ArrowDownwardOutlined />} style={{height:'8.5vh'}} onClick={()=> setDecSortFl(true)}> Price Filter</Button>
             </Grid>
         </Grid>
             {/* <Grid item xs={8} sm={4} md={5} >
