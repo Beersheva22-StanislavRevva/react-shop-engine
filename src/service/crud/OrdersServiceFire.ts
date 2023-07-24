@@ -58,6 +58,10 @@ while (this.userDataJson === "") {
     collectionCartRef: CollectionReference = collection(getFirestore(appFirebase), `users/${this.cartId}/cart`);
     collectionOrdersRef: CollectionReference = collection(getFirestore(appFirebase), 'orders');
        
+    setCollectionCartRef(uid:string):void {
+        this.collectionCartRef = collection(getFirestore(appFirebase), `users/${uid}/cart`);
+    }
+    
     async addProdToCart(empl: Product | null, email: string, quantity: number): Promise<void> {
         const isExist = await this.cartExists(empl?.id);
         const docRef = this.getCartDocRef(empl?.id);

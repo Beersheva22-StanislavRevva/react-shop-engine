@@ -15,6 +15,7 @@ import CartItemCard from "../cards/CartItemCard";
 import UserData from "../../model/UserData";
 import CartItem from "../../model/CartItem";
 import Order from "../../model/Order";
+import OrderCard from "../cards/OrderCard";
 const columnsCommon: GridColDef[] = [
     // {
     //     field: 'serial', headerName: '#', flex: 0.3, headerClassName: 'data-grid-header',
@@ -184,21 +185,22 @@ const Orders: React.FC = () => {
        ]
        const columnsPortrait: GridColDef[] = [
         columnsCommon[0],
-        columnsCommon[1],
+        columnsCommon[3],
+        columnsCommon[6],
         {
             field: 'actions', type: "actions", getActions: (params) => {
                 return [
                    
                     <GridActionsCellItem label="details" icon={<Visibility />}
-                        onClick={() => {
-                            employeeId.current = params.id as any;
-                            if (params.row) {
-                                const empl = params.row;
-                                empl && (employee.current = empl);
-                                setFlDetails(true)
-                            }
-    
+                    onClick={() => {
+                        orderId.current = params.id as any;
+                        if (params.row) {
+                            const item = params.row;
+                            item && (order.current = item);
+                            setFlDetails(true)
                         }
+
+                    }
                         } />
                 ] ;
             }
@@ -228,6 +230,8 @@ const Orders: React.FC = () => {
     const [selectedProduct, setSelectedProduct] = useState<any[]>([]);
     const [selectedOrder, setSelectedOrder] = useState<any>({});
     const [editOrder, setEditOrder] = useState(false);
+    const orderId = useRef('');
+    const order = useRef<Order | undefined>();
     
     function getColumns(): GridColDef[] {
         
@@ -288,11 +292,13 @@ const Orders: React.FC = () => {
     }
     function cardAction(isDelete: boolean){
         if (isDelete) {
-            removeEmployee(employeeId.current);
+            const cartdetails =  order.current?.cartItems as Product[];
+                            setSelectedProduct(cartdetails);
         } else {
-            setFlEdit(true)
+            const orderDetails = order.current;
+                        setCanceledStatus(orderDetails);
         }
-        setFlDetails(false)
+        //setFlDetails(false)
     }
     async function updateQuantity (empl:any, newQuant:number): Promise<void> {
         const quantity= empl.quantity || 0;
@@ -414,6 +420,7 @@ const Orders: React.FC = () => {
                 <DataGrid columns={columnsDetails} rows={selectedProduct} style={{fontSize:"70%"}}/>
             </Box>
         </Modal>
+        
         <Modal
             open={openEdit}
             onClose={() => setFlEdit(false)}
@@ -425,16 +432,16 @@ const Orders: React.FC = () => {
             </Box>
 
         </Modal>
-        {/* <Modal
+         <Modal
             open={openDetails}
             onClose={() => setFlDetails(false)}
             aria-labelledby="modal-modal-title"
             aria-describedby="modal-modal-description"
         >
             <Box sx={style}>
-                <EmployeeCard actionFn={cardAction} product={employee.current!} />
+                <OrderCard actionFn={cardAction} order={order.current!} />
             </Box>
-        </Modal> */}
+        </Modal>
         <Modal
             open={editOrder}
             onClose={() => setEditOrder(false)}

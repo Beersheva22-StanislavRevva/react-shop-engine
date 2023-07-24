@@ -152,7 +152,7 @@ const Cart: React.FC = () => {
     const content = useRef('');
     const productId = useRef('');
     const confirmFn = useRef<any>(null);
-    const cartItem = useRef<Product | undefined>();
+    const cartItem = useRef<any | undefined>();
     const [buttonFl, setButtonFl] = useState<boolean>(true);
     
     
@@ -281,6 +281,10 @@ const Cart: React.FC = () => {
        setOpenOrderDetails(false);
        ordersService.clearCart(cartContent); 
     }
+    function orderResetClick (event:any) : void  {
+        setOpenOrderDetails(false);
+        
+     }
     function getIconRemoveItem() {
         return buttonFl ? <RemoveCircleOutline /> : <></> ; 
     }
@@ -312,8 +316,11 @@ const Cart: React.FC = () => {
          onClose={() => setOpenOrderDetails(false)}
          aria-labelledby="modal-modal-title"
          aria-describedby="modal-modal-description">
-             <Box sx={{ height: '50vh', width: '70vw', backgroundColor:'white' }}>
-                <form onSubmit={orderDetailsClick} >
+             <Box sx={{ backgroundColor: 'white', position: 'absolute' as 'absolute',top: '25%', left: '25%', }}>
+                <Typography variant="h5" color="text.secondary" textAlign="center" margin="4vh">
+                    Enter delivery adress and contact phone
+                </Typography>
+                <form onSubmit={orderDetailsClick} onReset={orderResetClick} >
                     <Grid container spacing={4} justifyContent="center">
                         <Grid item xs={8} sm={5} >
                         <TextField type="text" required fullWidth label="Delivery Adress"
@@ -332,6 +339,7 @@ const Cart: React.FC = () => {
                     </Grid>
                     <Box sx={{ marginTop: { xs: "10vh", sm: "5vh" }, textAlign: "center" }}>
                         <Button type="submit" >Confirm Order</Button>
+                        <Button type="reset" >Reset</Button>
                     </Box>
                 </form>
              </Box>    

@@ -155,7 +155,7 @@ const ProductEditor: React.FC = () => {
         dispatch(errorMessage, '');
         setOpenConfirm(false);
     }
-    function updateEmployee(empl: Product): Promise<InputResult> {
+    function updateProduct(empl: Product): Promise<InputResult> {
         setFlEdit(false)
         const res: InputResult = { status: 'error', message: '' };
         if (JSON.stringify(product.current) != JSON.stringify(empl)) {
@@ -207,7 +207,7 @@ const ProductEditor: React.FC = () => {
             aria-describedby="modal-modal-description"
         >
             <Box sx={style}>
-                <ProductForm submitFn={updateEmployee} productUpdated={product.current} />
+                <ProductForm submitFn={updateProduct} productUpdated={product.current} />
             </Box>
         </Modal>
         {/* <Modal

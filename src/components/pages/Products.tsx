@@ -334,7 +334,7 @@ const Products: React.FC = () => {
         <Grid container spacing={3} marginTop='2vh'>
             {productsFilter.map(e =>
                 <Grid item xs={6} sm={3} lg={2} key={e.id}>
-                    <Card sx={{ maxWidth: '100', maxHeight: '200', display: 'flex', flexDirection: 'column', alignItems: 'center', }}
+                    <Card sx={{ maxWidth: '100', maxHeight: '200', display: 'flex', flexDirection: 'column', alignItems: 'center' }}
                     >
                         <div onClick={() => setSelectedProduct(e)}>
                             <CardMedia

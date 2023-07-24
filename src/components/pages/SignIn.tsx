@@ -3,7 +3,7 @@ import Input from "../common/Input";
 import InputResult from "../../model/InputResult";
 import { authActions } from "../../redux/slices/authSlice";
 import LoginData from "../../model/LoginData";
-import { authService } from "../../config/service-config";
+import { authService, ordersService } from "../../config/service-config";
 import UserData from "../../model/UserData";
 import SignInForm from "../forms/SignInForm";
 import OrdersServiceFire from "../../service/crud/OrdersServiceFire";
@@ -17,9 +17,10 @@ const SignIn: React.FC = () => {
         try {
             const res: UserData = await authService.login(loginData);
             res && dispatch(authActions.set(res));
-            // if (res?.role === 'user') {
-            //     const userCartService = new OrdersServiceFire();
-            // }
+            if ( res?.uid && res.role === 'user') {
+            ordersService.setCollectionCartRef(res.uid);
+            }
+
             inputResult = {status: res ? 'success' : 'error',
             message: res ? '' : 'Incorrect Credentials'}
             

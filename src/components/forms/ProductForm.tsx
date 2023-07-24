@@ -1,5 +1,5 @@
 import React, { useRef, useState } from "react";
-import { FormControl, Grid, TextField, InputLabel, Select, Box, MenuItem, Button, FormLabel, RadioGroup, FormControlLabel, Radio, FormHelperText, Snackbar, Alert } from '@mui/material';
+import { FormControl, Grid, TextField, InputLabel, Select, Box, MenuItem, Button, FormLabel, RadioGroup, FormControlLabel, Radio, FormHelperText, Snackbar, Alert, Typography } from '@mui/material';
 import Product from "../../model/Product";
 import productsConfig from "../../config/product-config.json"
 import InputResult from "../../model/InputResult";
@@ -26,6 +26,7 @@ export const ProductForm: React.FC<Props> = ({ submitFn, productUpdated: product
     const [product, setProduct] =
         useState<Product>(productUpdated || initialProduct);
         const [errorMessage, setErrorMessage] = useState('');
+    const[previewImage, setPreviewImage] = useState("");
     function handlerName(event: any) {
         const name = event.target.value;
         const prodCopy = { ...product };
@@ -40,6 +41,7 @@ export const ProductForm: React.FC<Props> = ({ submitFn, productUpdated: product
     }
     function handlerImageLink(event: any) {
         const imageLink = event.target.value;
+        setPreviewImage(imageLink);
         const prodCopy = { ...product };
         prodCopy.imageLink = imageLink;
         setProduct(prodCopy);
@@ -72,9 +74,9 @@ export const ProductForm: React.FC<Props> = ({ submitFn, productUpdated: product
         setProduct(productUpdated || initialProduct);
     }
 
-    return <Box sx={{ marginTop: { sm: "25vh" } }}>
+    return <Box sx={{ marginTop: { sm: "3vh" } }}>
         <form onSubmit={onSubmitFn} onReset={onResetFn}>
-            <Grid container spacing={4} justifyContent="center">
+            <Grid container spacing={3} justifyContent="center">
                 <Grid item xs={8} sm={5} >
                     <FormControl fullWidth required>
                         <InputLabel id="select-department-id">Category</InputLabel>
@@ -120,8 +122,16 @@ export const ProductForm: React.FC<Props> = ({ submitFn, productUpdated: product
                             max: `${maxPrice }`
                         }} />
                 </Grid>
+                <Grid item xs={8} sm={4} md={5} >
+                <Box display="flex" flexDirection="row" justifyContent="left" alignContent="center">
+                <Box width='8vw' alignItems="center" justifyItems="center" >
+                <img src={previewImage} alt="previewImage" width="100%"/>
+                </Box>
+                <Typography variant='body2' color='gray' alignContent='center'>image preview</Typography>
+                </Box>
+                </Grid>
             </Grid>
-            <Box sx={{ marginTop: { xs: "10vh", sm: "5vh" }, textAlign: "center" }}>
+            <Box sx={{ marginTop: { xs: "10vh", sm: "3vh" }, textAlign: "center" }}>
                 <Button type="submit" >Submit</Button>
                 <Button type="reset">Reset</Button>
             </Box>

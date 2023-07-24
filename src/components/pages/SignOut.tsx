@@ -21,7 +21,7 @@ const SignOut: React.FC = () => {
             sum: ((employees.find(el => el.id == e.id)?.price)||0) * (e.quantity||0)}
     });
     return <Button onClick={() => {dispatch(authActions.reset());
-                                ordersService.clearCart(cartContent)
+                               // ordersService.clearCart(cartContent)
                              }}>confirm sign out</Button>
 }
  

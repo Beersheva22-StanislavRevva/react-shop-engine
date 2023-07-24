@@ -14,7 +14,7 @@ const AddProduct: React.FC = () => {
         const res: InputResult = { status: 'success', message: '' };
         try {
             const product: Product = await productService.addProduct(empl);
-            successMessage = `employee with id: ${product.id} has been added`
+            successMessage = `product with id: ${product.id} has been added`
         } catch (error: any) {
             errorMessage = error;
         }
